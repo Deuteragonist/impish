@@ -39,6 +39,8 @@ int main()
          eval(cmdline);
       }
    }
+
+   return 0;
 }
 
 void eval(char *cmdline)
@@ -57,8 +59,8 @@ void eval(char *cmdline)
 
    if (!builtin_command(argv)) {
       switch (pid = fork()) {
-      case 0:                  /* child */
-         if (execve(argv[0], argv, environ) < 0) {
+      case 0:                 
+         if (execvp(argv[0], argv) < 0) {
             printf("%s: Command not found: %s\n", argv[0], strerror(errno));
 
             exit(0);
@@ -83,12 +85,11 @@ void eval(char *cmdline)
       }
 
    }
-   return;
 }
 
 int builtin_command(char **argv)
 {
-   if (!strcmp(argv[0], "quit")) { 
+   if (!strcmp(argv[0], "quit")) {
       exit(0);
    }
 
@@ -96,16 +97,16 @@ int builtin_command(char **argv)
       return 1;
    }
 
-   return 0;                  
+   return 0;
 }
 
 int parseline(char *buf, char **argv)
 {
-   char *delim;               
-   int argc;                   
-   int bg;                     
+   char *delim;
+   int argc;
+   int bg;
 
-   buf[strlen(buf) - 1] = ' ';  
+   buf[strlen(buf) - 1] = ' ';
    while (*buf && (*buf == ' ')) {
       buf++;
    }
@@ -116,12 +117,12 @@ int parseline(char *buf, char **argv)
       *delim = '\0';
       buf = delim + 1;
 
-      while (*buf && (*buf == ' '))     
+      while (*buf && (*buf == ' '))
          buf++;
    }
    argv[argc] = NULL;
 
-   if (argc == 0) { 
+   if (argc == 0) {
       return 1;
    }
 

@@ -9,7 +9,7 @@ CC=gcc
 RM=rm
 SRC=impish.c 
 INC=
-CFLAGS=-std=c99 -Wall -Wextra -pedantic  
+CFLAGS=-std=c99 -Wall -Wextra -pedantic
 DFLAGS=-g
 RFLAGS=-DNDEBUG -O2
 OUT=impish
