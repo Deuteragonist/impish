@@ -59,7 +59,7 @@ void eval(char *cmdline)
 
    if (!builtin_command(argv)) {
       switch (pid = fork()) {
-      case 0:                 
+      case 0:
          if (execvp(argv[0], argv) < 0) {
             printf("%s: Command not found: %s\n", argv[0], strerror(errno));
 
