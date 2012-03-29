@@ -86,49 +86,47 @@ void eval(char *cmdline)
    return;
 }
 
-/* If first arg is a builtin command, run it and return true */
 int builtin_command(char **argv)
 {
-   if (!strcmp(argv[0], "quit"))        /* quit command */
+   if (!strcmp(argv[0], "quit")) { 
       exit(0);
-   if (!strcmp(argv[0], "&"))   /* Ignore singleton & */
+   }
+
+   if (!strcmp(argv[0], "&")) {
       return 1;
-   return 0;                    /* Not a builtin command */
+   }
+
+   return 0;                  
 }
 
-/* $end eval */
-
-/* $begin parseline */
-/* parseline - Parse the command line and build the argv array */
 int parseline(char *buf, char **argv)
 {
-   char *delim;                 /* Points to first space delimiter */
-   int argc;                    /* Number of args */
-   int bg;                      /* Background job? */
+   char *delim;               
+   int argc;                   
+   int bg;                     
 
-   buf[strlen(buf) - 1] = ' ';  /* Replace trailing '\n' with space */
-   while (*buf && (*buf == ' '))        /* Ignore leading spaces */
+   buf[strlen(buf) - 1] = ' ';  
+   while (*buf && (*buf == ' ')) {
       buf++;
+   }
 
-   /* Build the argv list */
    argc = 0;
    while ((delim = strchr(buf, ' '))) {
       argv[argc++] = buf;
       *delim = '\0';
       buf = delim + 1;
-      while (*buf && (*buf == ' '))     /* Ignore spaces */
+
+      while (*buf && (*buf == ' '))     
          buf++;
    }
    argv[argc] = NULL;
 
-   if (argc == 0)               /* Ignore blank line */
+   if (argc == 0) { 
       return 1;
+   }
 
-   /* Should the job run in the background? */
    if ((bg = (*argv[argc - 1] == '&')) != 0)
       argv[--argc] = NULL;
 
    return bg;
 }
-
-/* $end parseline */
