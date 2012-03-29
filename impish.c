@@ -21,19 +21,23 @@ int builtin_command(char **argv);
 int main()
 {
    char cmdline[MAXLINE];
+   bool alive = true;
 
-   while (true) {
+   while (alive) {
       printf("> ");
 
       if (fgets(cmdline, MAXLINE, stdin) == NULL) {
-         printf("error %i: %s\n", errno, strerror(errno));
+         if(errno) {
+             int fgetsErrno = errno;
+             fprintf(stderr, "fgets: %s\n", strerror(fgetsErrno));
+         }
       }
 
       if (feof(stdin)) {
-         exit(0);
+         alive = false;
+      } else {
+         eval(cmdline);
       }
-
-      eval(cmdline);
    }
 }
 
