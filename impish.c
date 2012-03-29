@@ -12,7 +12,7 @@
 #define MAXARGS   128
 #define MAXLINE   4096
 
-extern char** environ;
+extern char **environ;
 
 void eval(char *cmdline);
 int parseline(char *buf, char **argv);
@@ -27,9 +27,9 @@ int main()
       printf("> ");
 
       if (fgets(cmdline, MAXLINE, stdin) == NULL) {
-         if(errno) {
-             int fgetsErrno = errno;
-             fprintf(stderr, "fgets: %s\n", strerror(fgetsErrno));
+         if (errno) {
+            int fgetsErrno = errno;
+            fprintf(stderr, "fgets: %s\n", strerror(fgetsErrno));
          }
       }
 
@@ -56,21 +56,32 @@ void eval(char *cmdline)
    }
 
    if (!builtin_command(argv)) {
-      if ((pid = fork()) == 0) {
+      switch (pid = fork()) {
+      case 0:                  /* child */
          if (execve(argv[0], argv, environ) < 0) {
-            printf("%s: Command not found.\n", argv[0]);
+            printf("%s: Command not found: %s\n", argv[0], strerror(errno));
+
             exit(0);
          }
+         break;
+
+      case -1:
+         perror("fork");
+         exit(EXIT_FAILURE);
+         break;
+
+      default:
+         if (!bg) {
+            int status;
+            if (waitpid(pid, &status, 0) < 0) {
+               perror("waitpid");
+            }
+         } else {
+            printf("%d %s", pid, cmdline);
+         }
+         break;
       }
 
-      if (!bg) {
-         int status;
-         if (waitpid(pid, &status, 0) < 0) {
-            perror("waitpid");
-         }
-      } else {
-         printf("%d %s", pid, cmdline);
-      }
    }
    return;
 }
