@@ -25,6 +25,8 @@ OUT=impish
 INDENT=indent
 IFLAGS=-i3 -nut -linux
 SIZE=size
+INSTALL=install
+PREFIX=/usr/local/bin
 
 .PHONY: all help indent clean
 
@@ -39,11 +41,14 @@ $(OUT)-dbg: $(SRC) $(INC)
 	@$(SIZE) $(OUT)-dbg
 
 help:
-	@echo available targets: $(OUT) $(OUT)-dbg indent clean
+	@echo available targets: $(OUT) $(OUT)-dbg indent clean install
 
 indent:
 	@$(INDENT) $(IFLAGS) $(SRC) $(INC)
 
 clean:
 	@$(RM) -f $(OUT) $(OUT)-dbg *.o *~
+
+install: $(OUT)
+	@$(INSTALL) $(OUT) $(PREFIX)
 
