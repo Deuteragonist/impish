@@ -1,9 +1,9 @@
 #
 # CMPSC 311, Spring 2012, Project 7
 #
-# Author:   Max DeLiso
-# Email:    jmd5473@psu.edu, maxdeliso@gmail.com
-# File:		Makefile
+# Author: Max DeLiso
+# Email: jmd5473@psu.edu, maxdeliso@gmail.com
+# File: Makefile
 # License:
 #
 # THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING 
