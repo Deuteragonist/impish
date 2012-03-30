@@ -1,79 +1,84 @@
 #include <unistd.h>
 #include <sys/types.h>
 #include <sys/wait.h>
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdbool.h>
+#include <stddef.h>
 #include <string.h>
+
 #include <errno.h>
 #include <signal.h>
 #include <assert.h>
 
-#define MAXARGS   128
-#define MAXLINE   4096
+#include <readline/readline.h>
+#include <readline/history.h>
 
 extern char **environ;
 
-void eval(char *cmdline);
-int parseline(char *buf, char **argv);
-int builtin_command(char **argv);
+static const char DEFAULT_PROMPT[] = ">> ";
+
+void eval(const char *const cmdline);
+int parseLine(const char *const buf, int *argcPtr, char ***argvPtr);
+bool builtinCommand(const char *const *const argv);
 
 int main()
 {
-   char cmdline[MAXLINE];
-   bool alive = true;
+   char *cmdline;
 
-   while (alive) {
-      printf("> ");
+   do {
+      cmdline = readline(DEFAULT_PROMPT);
 
-      if (fgets(cmdline, MAXLINE, stdin) == NULL) {
-         if (errno) {
-            int fgetsErrno = errno;
-            fprintf(stderr, "fgets: %s\n", strerror(fgetsErrno));
-         }
-      }
-
-      if (feof(stdin)) {
-         alive = false;
-      } else {
+      if (cmdline) {
          eval(cmdline);
+         free(cmdline);
       }
-   }
+   } while (cmdline && !feof(stdin));
 
    return 0;
 }
 
-void eval(char *cmdline)
+void eval(const char *const cmdline)
 {
-   char *argv[MAXARGS];
-   char buf[MAXLINE];
-   int bg;
    pid_t pid;
+   int ret;
+   int argc = 0;
+   char **argv = NULL;
 
-   strcpy(buf, cmdline);
-   bg = parseline(buf, argv);
+   /* TODO: maybe remove leading trailing whitespace in place */
 
-   if (argv[0] == NULL) {
+   ret = parseLine(cmdline, &argc, &argv);
+
+   if (argv == NULL || argv[0] == NULL) {
+      free(argv);
       return;
    }
 
-   if (!builtin_command(argv)) {
+   if (builtinCommand((const char **)argv)) {
+      return;
+   }
+
+   /* if we were able to find a command */
+   /* TODO: devise a more transparent return machanism for parseLine */
+   if (ret != 1)
       switch (pid = fork()) {
       case 0:
-         if (execvp(argv[0], argv) < 0) {
-            printf("%s: Command not found: %s\n", argv[0], strerror(errno));
+         if (execvp(argv[0], argv) == -1) {
+            fprintf(stderr,
+                    "%s: Command execution failed: %s\n",
+                    argv[0], strerror(errno));
 
+            /* TODO: return something different here */
             exit(0);
          }
-         break;
 
       case -1:
          perror("fork");
          exit(EXIT_FAILURE);
-         break;
 
       default:
-         if (!bg) {
+         if (!ret) {
             int status;
             if (waitpid(pid, &status, 0) < 0) {
                perror("waitpid");
@@ -84,50 +89,80 @@ void eval(char *cmdline)
          break;
       }
 
+   /* free all of the memory allocated by parseLine */
+   for (int i = 0; i < argc; ++i) {
+      free(argv[i]);
    }
+   free(argv);
+
 }
 
-int builtin_command(char **argv)
+bool builtinCommand(const char *const *const argv)
 {
    if (!strcmp(argv[0], "quit")) {
       exit(0);
    }
 
    if (!strcmp(argv[0], "&")) {
-      return 1;
+      return true;
    }
 
-   return 0;
+   return false;
 }
 
-int parseline(char *buf, char **argv)
+int parseLine(const char *const buf, int *argcPtr, char ***argvPtr)
 {
-   char *delim;
-   int argc;
-   int bg;
+   static const int ARGV_INIT_CAPACITY = 16;
 
-   buf[strlen(buf) - 1] = ' ';
-   while (*buf && (*buf == ' ')) {
-      buf++;
+   /* initialize local variables */
+   int argc = 0;
+   int argvCap = ARGV_INIT_CAPACITY;
+   char **argv = malloc(argvCap * sizeof(void *));
+   assert(argv);
+
+   /* TODO: extract first token and place it into argv[0] */
+   argv[0] = NULL;
+   argc = 1;
+
+   /* cpos's address can be changed, but not the character it points to */
+   char const *cpos = buf;
+   while ((cpos = strchr(cpos, ' '))) {
+
+      /* compute the length of the current token */
+      const char const *const npos = strchr(cpos + 1, ' ');
+      const int clen =
+          (npos) ? (npos - (cpos + 1)) : ((int)strlen(buf) -
+                                          ((cpos + 1) - buf));
+
+      /* make sure argv is large enough */
+      /* TODO: wrap this this into a function */
+      if (argc >= argvCap) {
+         argvCap *= 2;
+         argv = realloc(argv, argvCap * sizeof(void *));
+         assert(argv);
+      }
+
+      /* copy the current token into the argument vector */
+      argv[argc] = strndup(cpos, (size_t) clen);
+      assert(argv[argc]);
+      ++argc;
+
+      /* advance to the next character in buf */
+      ++cpos;
    }
 
-   argc = 0;
-   while ((delim = strchr(buf, ' '))) {
-      argv[argc++] = buf;
-      *delim = '\0';
-      buf = delim + 1;
-
-      while (*buf && (*buf == ' '))
-         buf++;
+   /* NULL terminate argv */
+   /* TODO: wrap this this into a function */
+   if (argc >= argvCap) {
+      argvCap *= 2;
+      argv = realloc(argv, argvCap * sizeof(void *));
+      assert(argv);
    }
    argv[argc] = NULL;
 
-   if (argc == 0) {
-      return 1;
-   }
+   /* copy argc and argv back to caller (pass by value-return) */
+   *argcPtr = argc;
+   *argvPtr = argv;
 
-   if ((bg = (*argv[argc - 1] == '&')) != 0)
-      argv[--argc] = NULL;
-
-   return bg;
+   return 0;
 }

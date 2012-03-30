@@ -9,7 +9,8 @@ CC=gcc
 RM=rm
 SRC=impish.c 
 INC=
-CFLAGS=-std=c99 -Wall -Wextra -pedantic
+CFLAGS=-std=c99 -D_XOPEN_SOURCE=700 -Wall -Wextra -pedantic
+LDFLAGS=-lreadline
 DFLAGS=-g
 RFLAGS=-DNDEBUG -O2
 OUT=impish
@@ -19,14 +20,15 @@ SIZE=size
 
 .PHONY: all help indent clean
 
-all: $(OUT) $(OUT)-dbg
+all: $(OUT) 
 
 $(OUT): $(SRC) $(INC)
-	@$(CC) $(CFLAGS) $(RFLAGS) $(SRC) -o $(OUT)
+	@$(CC) $(CFLAGS) $(RFLAGS) $(LDFLAGS) $(SRC) -o $(OUT)
 	@$(SIZE) $(OUT)
 
 $(OUT)-dbg: $(SRC) $(INC)
-	@$(CC) $(CFLAGS) $(DFLAGS) $(SRC) -o $(OUT)-dbg
+	@$(CC) $(CFLAGS) $(DFLAGS) $(LDFLAGS) $(SRC) -o $(OUT)-dbg
+	@$(SIZE) $(OUT)-dbg
 
 help:
 	@echo available targets: $(OUT) $(OUT)-dbg indent clean
