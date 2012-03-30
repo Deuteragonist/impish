@@ -1,3 +1,13 @@
+/* 
+ * CMPSC 311, Spring 2012, Project 7
+ *
+ * 
+ * Author: Max DeLiso
+ * Email:  jmd5473@psu.edu, maxdeliso@gmail.com
+ * File:	  Makefile
+ *
+ */
+
 #include <unistd.h>
 #include <sys/types.h>
 #include <sys/wait.h>

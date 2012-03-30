@@ -1,0 +1,5 @@
+impish depends on readline
+
+there isn't a build system integrated yet outside of the makefile
+
+it's a work in progress
