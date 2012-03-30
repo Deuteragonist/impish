@@ -124,9 +124,9 @@ int parseLine(const char *const buf, int *argcPtr, char ***argvPtr)
    assert(argv);
 
    /* extract first token into argv[0] */
-   if((cpos=strchr(buf, ' '))) {
-      printf("length of first string: %i\n", (int)(cpos-buf));
-      argv[0] = strndup(buf, cpos-buf);
+   if ((cpos = strchr(buf, ' '))) {
+      printf("length of first string: %i\n", (int)(cpos - buf));
+      argv[0] = strndup(buf, cpos - buf);
    } else {
       argv[0] = strdup(buf);
    }
@@ -152,7 +152,7 @@ int parseLine(const char *const buf, int *argcPtr, char ***argvPtr)
       }
 
       /* copy the current token into the argument vector */
-      argv[argc] = strndup(cpos+1, (size_t) clen);
+      argv[argc] = strndup(cpos + 1, (size_t) clen);
       assert(argv[argc]);
       ++argc;
 
