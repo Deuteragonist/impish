@@ -15,23 +15,25 @@ RFLAGS=-DNDEBUG -O2
 OUT=impish
 INDENT=indent
 IFLAGS=-i3 -nut -linux
+SIZE=size
 
 .PHONY: all help indent clean
 
 all: $(OUT) $(OUT)-dbg
 
 $(OUT): $(SRC) $(INC)
-	$(CC) $(CFLAGS) $(RFLAGS) $(SRC) -o $(OUT)
+	@$(CC) $(CFLAGS) $(RFLAGS) $(SRC) -o $(OUT)
+	@$(SIZE) $(OUT)
 
 $(OUT)-dbg: $(SRC) $(INC)
-	$(CC) $(CFLAGS) $(DFLAGS) $(SRC) -o $(OUT)-dbg
+	@$(CC) $(CFLAGS) $(DFLAGS) $(SRC) -o $(OUT)-dbg
 
 help:
 	@echo available targets: $(OUT) $(OUT)-dbg indent clean
 
 indent:
-	$(INDENT) $(IFLAGS) $(SRC) $(INC)
+	@$(INDENT) $(IFLAGS) $(SRC) $(INC)
 
 clean:
-	$(RM) -f $(OUT) $(OUT)-dbg *.o *~
+	@$(RM) -f $(OUT) $(OUT)-dbg *.o *~
 
