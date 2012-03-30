@@ -31,17 +31,30 @@
 #include <readline/history.h>
 
 extern char **environ;
+extern char *optarg;
+extern int optind, opterr, optopt;
 
 static const char DEFAULT_PROMPT[] = ">> ";
+static const char OPT_STRING[] = "hvies:";
+static const char USAGE_STRING[] =
+    "Usage:  impish [-h] [-v] [-i] [-e] [-s f] [file]\n"
+    " -h     help\n"
+    " -v     verbose mode\n"
+    " -i     interactive mode\n"
+    " -e     echo commands before execution\n"
+    " -s f   use startup file f, default impish.init\n"
+    " Shell commands:\n" "  help \n";
 
+int processArgs(int argc, char *const argv[]);
 void eval(const char *const cmdline);
 int parseLine(const char *const buf, int *argcPtr, char ***argvPtr);
 bool builtinCommand(const char *const *const argv);
 
-int main()
+int main(int argc, char *argv[])
 {
-   char *cmdline;
+   int flags = processArgs(argc, argv);
 
+   char *cmdline;
    do {
       cmdline = readline(DEFAULT_PROMPT);
 
@@ -52,6 +65,46 @@ int main()
    } while (cmdline && !feof(stdin));
 
    return 0;
+}
+
+int processArgs(int argc, char *const argv[])
+{
+   int opt, flags = 0;
+
+   /* TODO: set flags */
+   while ((opt = getopt(argc, argv, OPT_STRING)) != -1) {
+      switch (opt) {
+      case 'h':
+         printf("%s", USAGE_STRING);
+         exit(EXIT_SUCCESS);
+
+      case 'v':
+         /* TODO: set a flag */
+         break;
+
+      case 'i':
+         /* TODO: set a flag */
+         break;
+
+      case 'e':
+         /* TODO: set a flag */
+         break;
+
+      case 's':
+         /* TODO: set a flag */
+         break;
+
+      default:
+         fprintf(stderr, "%s", USAGE_STRING);
+         exit(EXIT_FAILURE);
+      }
+   }
+
+   while (optind < argc) {
+      printf("warning: ignoring additional argument: %s ", argv[optind++]);
+   }
+
+   return flags;
 }
 
 void eval(const char *const cmdline)
@@ -85,7 +138,7 @@ void eval(const char *const cmdline)
                     argv[0], strerror(errno));
 
             /* TODO: return something different here */
-            exit(0);
+            exit(EXIT_SUCCESS);
          }
 
       case -1:
@@ -140,7 +193,7 @@ int parseLine(const char *const buf, int *argcPtr, char ***argvPtr)
 
    /* extract first token into argv[0] */
    if ((cpos = strchr(buf, ' '))) {
-      printf("length of first string: %i\n", (int)(cpos - buf));
+      /* printf("length of first string: %i\n", (int)(cpos - buf)); */
       argv[0] = strndup(buf, cpos - buf);
    } else {
       argv[0] = strdup(buf);
