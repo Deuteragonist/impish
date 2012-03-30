@@ -117,15 +117,24 @@ int parseLine(const char *const buf, int *argcPtr, char ***argvPtr)
    /* initialize local variables */
    int argc = 0;
    int argvCap = ARGV_INIT_CAPACITY;
+   /* cpos's address can be changed, but not the character it points to */
+   char const *cpos = NULL;
+   /* TODO: write a malloc/realloc wrapper */
    char **argv = malloc(argvCap * sizeof(void *));
    assert(argv);
 
-   /* TODO: extract first token and place it into argv[0] */
-   argv[0] = NULL;
-   argc = 1;
+   /* extract first token into argv[0] */
+   if((cpos=strchr(buf, ' '))) {
+      printf("length of first string: %i\n", (int)(cpos-buf));
+      argv[0] = strndup(buf, cpos-buf);
+   } else {
+      argv[0] = strdup(buf);
+   }
+   assert(argv[0]);
 
-   /* cpos's address can be changed, but not the character it points to */
-   char const *cpos = buf;
+   /* extract the rest of the tokens into argv[i] for i >= 1 */
+   argc = 1;
+   cpos = buf;
    while ((cpos = strchr(cpos, ' '))) {
 
       /* compute the length of the current token */
@@ -143,7 +152,7 @@ int parseLine(const char *const buf, int *argcPtr, char ***argvPtr)
       }
 
       /* copy the current token into the argument vector */
-      argv[argc] = strndup(cpos, (size_t) clen);
+      argv[argc] = strndup(cpos+1, (size_t) clen);
       assert(argv[argc]);
       ++argc;
 
