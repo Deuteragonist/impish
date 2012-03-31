@@ -45,14 +45,31 @@ static const char USAGE_STRING[] =
     " -s f   use startup file f, default impish.init\n"
     " Shell commands:\n" "  help \n";
 
-int processArgs(int argc, char *const argv[]);
+int verbose;
+
+#define impishVerify(tf, msg) _impishVerify(tf, msg,    __func__, __LINE__)
+#define impishMalloc(size)    _impishMalloc(size,       __func__, __LINE__)
+#define impishRealloc(size)   _impishRealloc(ptr, size, __func__, __LINE__)
+#define impishStrdup(s)       _impishStrdup(s,          __func__, __LINE__)
+
+void processArgs(int argc, char *const argv[]);
 void eval(const char *const cmdline);
 int parseLine(const char *const buf, int *argcPtr, char ***argvPtr);
 bool builtinCommand(const char *const *const argv);
 
+void _impishVerify(const bool tf,
+                   const char *msg, const char *func, const int line);
+
+void *_impishMalloc(const size_t size, const char *func, const int line);
+
+void *_impishRealloc(void *ptr,
+                     const size_t size, const char *func, const int line);
+
+char *_impishStrdup(const char *s, const char *func, const int line);
+
 int main(int argc, char *argv[])
 {
-   int flags = processArgs(argc, argv);
+   processArgs(argc, argv);
 
    char *cmdline;
    do {
@@ -67,9 +84,9 @@ int main(int argc, char *argv[])
    return 0;
 }
 
-int processArgs(int argc, char *const argv[])
+void processArgs(int argc, char *const argv[])
 {
-   int opt, flags = 0;
+   int opt;
 
    /* TODO: set flags */
    while ((opt = getopt(argc, argv, OPT_STRING)) != -1) {
@@ -103,8 +120,6 @@ int processArgs(int argc, char *const argv[])
    while (optind < argc) {
       printf("warning: ignoring additional argument: %s ", argv[optind++]);
    }
-
-   return flags;
 }
 
 void eval(const char *const cmdline)
@@ -187,9 +202,7 @@ int parseLine(const char *const buf, int *argcPtr, char ***argvPtr)
    int argvCap = ARGV_INIT_CAPACITY;
    /* cpos's address can be changed, but not the character it points to */
    char const *cpos = NULL;
-   /* TODO: write a malloc/realloc wrapper */
-   char **argv = malloc(argvCap * sizeof(void *));
-   assert(argv);
+   char **argv = impishMalloc(argvCap * sizeof(void *));
 
    /* extract first token into argv[0] */
    if ((cpos = strchr(buf, ' '))) {
@@ -242,4 +255,66 @@ int parseLine(const char *const buf, int *argcPtr, char ***argvPtr)
    *argvPtr = argv;
 
    return 0;
+}
+
+/* taken from heller c2html example */
+void _impishVerify(const bool tf, const char *msg, const char *func,
+                   const int line)
+{
+   if (tf == false) {
+      fprintf(stderr, "%s() at line %d failed: %s\n", func, line, msg);
+      exit(EXIT_FAILURE);
+   }
+}
+
+void *_impishMalloc(const size_t size, const char *func, const int line)
+{
+   void *p = malloc(size);
+   if (p == NULL) {
+      fprintf(stderr, "%s() at line %d failed: malloc(): %s\n", func,
+              line, strerror(errno));
+      exit(EXIT_FAILURE);
+   }
+
+   if (verbose) {
+      fprintf(stderr, "malloc(%zd) at %p from %s line %d\n", size, p,
+              func, line);
+   }
+
+   return p;
+}
+
+void *_impishRealloc(void *ptr, const size_t size, const char *func,
+                     const int line)
+{
+   void *p = realloc(ptr, size);
+   if (p == NULL) {
+      fprintf(stderr, "%s() at line %d failed: realloc(): %s\n", func,
+              line, strerror(errno));
+      exit(EXIT_FAILURE);
+   }
+
+   if (verbose) {
+      fprintf(stderr, "realloc(%p, %zd) at %p from %s line %d\n", ptr, size, p,
+              func, line);
+   }
+
+   return p;
+}
+
+char *_impishStrdup(const char *s, const char *func, const int line)
+{
+   char *p = strdup(s);
+   if (p == NULL) {
+      fprintf(stderr, "%s() at line %d failed: strdup(): %s\n", func,
+              line, strerror(errno));
+      exit(EXIT_FAILURE);
+   }
+
+   if (verbose) {
+      fprintf(stderr, "strdup(%zd) at %p from %s line %d\n",
+              strlen(s) + 1, p, func, line);
+   }
+
+   return p;
 }
