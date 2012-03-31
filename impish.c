@@ -22,6 +22,7 @@
 #include <stdbool.h>
 #include <stddef.h>
 #include <string.h>
+#include <stdarg.h>
 
 #include <errno.h>
 #include <signal.h>
@@ -30,10 +31,12 @@
 #include <readline/readline.h>
 #include <readline/history.h>
 
+/* linker directives for library globals */
 extern char **environ;
 extern char *optarg;
 extern int optind, opterr, optopt;
 
+/* read-only module-only globals */
 static const char DEFAULT_PROMPT[] = ">> ";
 static const char OPT_STRING[] = "hvies:";
 static const char USAGE_STRING[] =
@@ -45,19 +48,26 @@ static const char USAGE_STRING[] =
     " -s f   use startup file f, default impish.init\n"
     " Shell commands:\n" "  help \n";
 
-int verbose;
+/* read/write globals */
+bool verbose;
 
+/* macro utility functions */
 #define impishVerify(tf, msg)      _impishVerify(tf, msg,    __func__, __LINE__)
 #define impishMalloc(size)         _impishMalloc(size,       __func__, __LINE__)
 #define impishRealloc(ptr, size)   _impishRealloc(ptr, size, __func__, __LINE__)
 #define impishStrdup(s)            _impishStrdup(s,          __func__, __LINE__)
 #define impishStrndup(s,n)         _impishStrndup(s, n,      __func__, __LINE__)
+#define impishFree(s)              _impishFree(s,            __func__, __LINE__)
 
+/* TODO: split these definitions into multiple files */
+
+/* main routines */
 void processArgs(int argc, char *const argv[]);
 void eval(const char *const cmdline);
 int parseLine(const char *const buf, int *argcPtr, char ***argvPtr);
 bool builtinCommand(const char *const *const argv);
 
+/* utility functions/wrappers */
 void _impishVerify(const bool tf,
                    const char *msg, const char *func, const int line);
 
@@ -67,7 +77,11 @@ void *_impishRealloc(void *ptr,
                      const size_t size, const char *func, const int line);
 
 char *_impishStrdup(const char *s, const char *func, const int line);
-char *_impishStrndup(const char *s, const size_t n, const char *func, const int line);
+char *_impishStrndup(const char *s, const size_t n, const char *func,
+                     const int line);
+void _impishFree(void *s, const char *func, const int line);
+
+void impishMessage(const char *fmt, ...);
 
 int main(int argc, char *argv[])
 {
@@ -79,7 +93,7 @@ int main(int argc, char *argv[])
 
       if (cmdline) {
          eval(cmdline);
-         free(cmdline);
+         impishFree(cmdline);
       }
    } while (cmdline && !feof(stdin));
 
@@ -98,7 +112,7 @@ void processArgs(int argc, char *const argv[])
          exit(EXIT_SUCCESS);
 
       case 'v':
-         /* TODO: set a flag */
+         verbose = true;
          break;
 
       case 'i':
@@ -129,18 +143,18 @@ void eval(const char *const cmdline)
    pid_t pid;
    int ret;
    int argc = 0;
-   char ** argv = NULL;
+   char **argv = NULL;
 
    /* TODO: maybe remove leading trailing whitespace in place */
 
    ret = parseLine(cmdline, &argc, &argv);
 
    if (argv == NULL || argv[0] == NULL) {
-      free(argv);
+      impishFree(argv);
       return;
    }
 
-   if (builtinCommand((const char * const * const)argv)) {
+   if (builtinCommand((const char *const *const)argv)) {
       return;
    }
 
@@ -176,9 +190,9 @@ void eval(const char *const cmdline)
 
    /* free all of the memory allocated by parseLine */
    for (int i = 0; i < argc; ++i) {
-      free(argv[i]);
+      impishFree(argv[i]);
    }
-   free(argv);
+   impishFree(argv);
 
 }
 
@@ -201,23 +215,24 @@ int parseLine(const char *const buf, int *argcPtr, char ***argvPtr)
 
    int argc = 0;
    int argvCap = ARGV_INIT_CAPACITY;
-   char const *cpos = NULL; /* chars that cpos points to are read only */
+   char const *cpos = NULL;     /* chars that cpos points to are read only */
    char **argv = impishMalloc(argvCap * sizeof(void *));
    int bufStart;
 
    /* skip leading whitespace */
-   for(bufStart = 0; isspace(buf[bufStart]); ++bufStart);
+   for (bufStart = 0; isspace(buf[bufStart]); ++bufStart) ;
 
-   const char *const ebuf = buf+bufStart;
+   /* bind offset plus start buffer to form effective buffer,
+    * this is needed due to the fact that buf is const qualified */
+   const char *const ebuf = buf + bufStart;
 
    /* extract first token into argv[0] */
    if ((cpos = strchr(ebuf, ' '))) {
-      printf("length of first string: %i\n", (int)(cpos - ebuf)); 
+      printf("length of first string: %i\n", (int)(cpos - ebuf));
       argv[0] = impishStrndup(ebuf, cpos - ebuf);
    } else {
       argv[0] = impishStrdup(ebuf);
    }
-   assert(argv[0]);
 
    /* extract the rest of the tokens into argv[i] for i >= 1 */
    argc = 1;
@@ -325,7 +340,8 @@ char *_impishStrdup(const char *s, const char *func, const int line)
    return p;
 }
 
-char *_impishStrndup(const char *s, const size_t n, const char *func, const int line)
+char *_impishStrndup(const char *s, const size_t n, const char *func,
+                     const int line)
 {
    char *p = strndup(s, n);
    if (p == NULL) {
@@ -340,4 +356,24 @@ char *_impishStrndup(const char *s, const size_t n, const char *func, const int 
    }
 
    return p;
+}
+
+void _impishFree(void *s, const char *func, const int line)
+{
+   if (verbose) {
+      fprintf(stderr, "free(%p) from %s line %d\n", s, func, line);
+   }
+
+   free(s);
+}
+
+void impishMessage(const char *fmt, ...)
+{
+   if (verbose) {
+      va_list argp;
+
+      va_start(argp, fmt);
+      vprintf(fmt, argp);
+      va_end(argp);
+   }
 }

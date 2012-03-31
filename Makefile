@@ -17,7 +17,7 @@ CC=gcc
 RM=rm
 SRC=impish.c 
 INC=
-CFLAGS=-std=c99 -D_XOPEN_SOURCE=700 -Wall -Wextra -pedantic
+CFLAGS=-std=c99 -D_XOPEN_SOURCE=700 -D_ISOC99_SOURCE -Wall -Wextra -pedantic
 LDFLAGS=-lreadline
 DFLAGS=-g
 RFLAGS=-DNDEBUG -O2
