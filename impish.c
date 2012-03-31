@@ -47,10 +47,11 @@ static const char USAGE_STRING[] =
 
 int verbose;
 
-#define impishVerify(tf, msg) _impishVerify(tf, msg,    __func__, __LINE__)
-#define impishMalloc(size)    _impishMalloc(size,       __func__, __LINE__)
-#define impishRealloc(size)   _impishRealloc(ptr, size, __func__, __LINE__)
-#define impishStrdup(s)       _impishStrdup(s,          __func__, __LINE__)
+#define impishVerify(tf, msg)      _impishVerify(tf, msg,    __func__, __LINE__)
+#define impishMalloc(size)         _impishMalloc(size,       __func__, __LINE__)
+#define impishRealloc(ptr, size)   _impishRealloc(ptr, size, __func__, __LINE__)
+#define impishStrdup(s)            _impishStrdup(s,          __func__, __LINE__)
+#define impishStrndup(s,n)         _impishStrndup(s, n,      __func__, __LINE__)
 
 void processArgs(int argc, char *const argv[]);
 void eval(const char *const cmdline);
@@ -66,6 +67,7 @@ void *_impishRealloc(void *ptr,
                      const size_t size, const char *func, const int line);
 
 char *_impishStrdup(const char *s, const char *func, const int line);
+char *_impishStrndup(const char *s, const size_t n, const char *func, const int line);
 
 int main(int argc, char *argv[])
 {
@@ -127,7 +129,7 @@ void eval(const char *const cmdline)
    pid_t pid;
    int ret;
    int argc = 0;
-   char **argv = NULL;
+   char ** argv = NULL;
 
    /* TODO: maybe remove leading trailing whitespace in place */
 
@@ -138,7 +140,7 @@ void eval(const char *const cmdline)
       return;
    }
 
-   if (builtinCommand((const char **)argv)) {
+   if (builtinCommand((const char * const * const)argv)) {
       return;
    }
 
@@ -197,43 +199,47 @@ int parseLine(const char *const buf, int *argcPtr, char ***argvPtr)
 {
    static const int ARGV_INIT_CAPACITY = 16;
 
-   /* initialize local variables */
    int argc = 0;
    int argvCap = ARGV_INIT_CAPACITY;
-   /* cpos's address can be changed, but not the character it points to */
-   char const *cpos = NULL;
+   char const *cpos = NULL; /* chars that cpos points to are read only */
    char **argv = impishMalloc(argvCap * sizeof(void *));
+   int bufStart;
+
+   /* skip leading whitespace */
+   for(bufStart = 0; isspace(buf[bufStart]); ++bufStart);
+
+   const char *const ebuf = buf+bufStart;
 
    /* extract first token into argv[0] */
-   if ((cpos = strchr(buf, ' '))) {
-      /* printf("length of first string: %i\n", (int)(cpos - buf)); */
-      argv[0] = strndup(buf, cpos - buf);
+   if ((cpos = strchr(ebuf, ' '))) {
+      printf("length of first string: %i\n", (int)(cpos - ebuf)); 
+      argv[0] = impishStrndup(ebuf, cpos - ebuf);
    } else {
-      argv[0] = strdup(buf);
+      argv[0] = impishStrdup(ebuf);
    }
    assert(argv[0]);
 
    /* extract the rest of the tokens into argv[i] for i >= 1 */
    argc = 1;
-   cpos = buf;
+   cpos = ebuf;
    while ((cpos = strchr(cpos, ' '))) {
 
       /* compute the length of the current token */
       const char const *const npos = strchr(cpos + 1, ' ');
       const int clen =
-          (npos) ? (npos - (cpos + 1)) : ((int)strlen(buf) -
-                                          ((cpos + 1) - buf));
+          (npos) ? (npos - (cpos + 1)) : ((int)strlen(ebuf) -
+                                          ((cpos + 1) - ebuf));
 
       /* make sure argv is large enough */
       /* TODO: wrap this this into a function */
       if (argc >= argvCap) {
          argvCap *= 2;
-         argv = realloc(argv, argvCap * sizeof(void *));
+         argv = impishRealloc(argv, argvCap * sizeof(void *));
          assert(argv);
       }
 
       /* copy the current token into the argument vector */
-      argv[argc] = strndup(cpos + 1, (size_t) clen);
+      argv[argc] = impishStrndup(cpos + 1, (size_t) clen);
       assert(argv[argc]);
       ++argc;
 
@@ -245,7 +251,7 @@ int parseLine(const char *const buf, int *argcPtr, char ***argvPtr)
    /* TODO: wrap this this into a function */
    if (argc >= argvCap) {
       argvCap *= 2;
-      argv = realloc(argv, argvCap * sizeof(void *));
+      argv = impishRealloc(argv, argvCap * sizeof(void *));
       assert(argv);
    }
    argv[argc] = NULL;
@@ -314,6 +320,23 @@ char *_impishStrdup(const char *s, const char *func, const int line)
    if (verbose) {
       fprintf(stderr, "strdup(%zd) at %p from %s line %d\n",
               strlen(s) + 1, p, func, line);
+   }
+
+   return p;
+}
+
+char *_impishStrndup(const char *s, const size_t n, const char *func, const int line)
+{
+   char *p = strndup(s, n);
+   if (p == NULL) {
+      fprintf(stderr, "%s() at line %d failed: strndup(): %s\n", func,
+              line, strerror(errno));
+      exit(EXIT_FAILURE);
+   }
+
+   if (verbose) {
+      fprintf(stderr, "strndup(%zd, %zd) at %p from %s line %d\n",
+              strlen(s) + 1, n, p, func, line);
    }
 
    return p;
