@@ -31,6 +31,9 @@
 #include <readline/readline.h>
 #include <readline/history.h>
 
+#include "impish.h"
+#include "util.h"
+
 /* linker directives for library globals */
 extern char **environ;
 extern char *optarg;
@@ -51,37 +54,11 @@ static const char USAGE_STRING[] =
 /* read/write globals */
 bool verbose;
 
-/* macro utility functions */
-#define impishVerify(tf, msg)      _impishVerify(tf, msg,    __func__, __LINE__)
-#define impishMalloc(size)         _impishMalloc(size,       __func__, __LINE__)
-#define impishRealloc(ptr, size)   _impishRealloc(ptr, size, __func__, __LINE__)
-#define impishStrdup(s)            _impishStrdup(s,          __func__, __LINE__)
-#define impishStrndup(s,n)         _impishStrndup(s, n,      __func__, __LINE__)
-#define impishFree(s)              _impishFree(s,            __func__, __LINE__)
-
-/* TODO: split these definitions into multiple files */
-
 /* main routines */
 void processArgs(int argc, char *const argv[]);
 void eval(const char *const cmdline);
 int parseLine(const char *const buf, int *argcPtr, char ***argvPtr);
 bool builtinCommand(const char *const *const argv);
-
-/* utility functions/wrappers */
-void _impishVerify(const bool tf,
-                   const char *msg, const char *func, const int line);
-
-void *_impishMalloc(const size_t size, const char *func, const int line);
-
-void *_impishRealloc(void *ptr,
-                     const size_t size, const char *func, const int line);
-
-char *_impishStrdup(const char *s, const char *func, const int line);
-char *_impishStrndup(const char *s, const size_t n, const char *func,
-                     const int line);
-void _impishFree(void *s, const char *func, const int line);
-
-void impishMessage(const char *fmt, ...);
 
 /* entry point */
 int main(int argc, char *argv[])
@@ -286,104 +263,4 @@ int parseLine(const char *const buf, int *argcPtr, char ***argvPtr)
    *argvPtr = argv;
 
    return 0;
-}
-
-/* taken from heller c2html example */
-void _impishVerify(const bool tf, const char *msg, const char *func,
-                   const int line)
-{
-   if (tf == false) {
-      fprintf(stderr, "%s() at line %d failed: %s\n", func, line, msg);
-      exit(EXIT_FAILURE);
-   }
-}
-
-void *_impishMalloc(const size_t size, const char *func, const int line)
-{
-   void *p = malloc(size);
-   if (p == NULL) {
-      fprintf(stderr, "%s() at line %d failed: malloc(): %s\n", func,
-              line, strerror(errno));
-      exit(EXIT_FAILURE);
-   }
-
-   if (verbose) {
-      fprintf(stderr, "malloc(%zd) at %p from %s line %d\n", size, p,
-              func, line);
-   }
-
-   return p;
-}
-
-void *_impishRealloc(void *ptr, const size_t size, const char *func,
-                     const int line)
-{
-   void *p = realloc(ptr, size);
-   if (p == NULL) {
-      fprintf(stderr, "%s() at line %d failed: realloc(): %s\n", func,
-              line, strerror(errno));
-      exit(EXIT_FAILURE);
-   }
-
-   if (verbose) {
-      fprintf(stderr, "realloc(%p, %zd) at %p from %s line %d\n", ptr, size, p,
-              func, line);
-   }
-
-   return p;
-}
-
-char *_impishStrdup(const char *s, const char *func, const int line)
-{
-   char *p = strdup(s);
-   if (p == NULL) {
-      fprintf(stderr, "%s() at line %d failed: strdup(): %s\n", func,
-              line, strerror(errno));
-      exit(EXIT_FAILURE);
-   }
-
-   if (verbose) {
-      fprintf(stderr, "strdup(%zd) at %p from %s line %d\n",
-              strlen(s) + 1, p, func, line);
-   }
-
-   return p;
-}
-
-char *_impishStrndup(const char *s, const size_t n, const char *func,
-                     const int line)
-{
-   char *p = strndup(s, n);
-   if (p == NULL) {
-      fprintf(stderr, "%s() at line %d failed: strndup(): %s\n", func,
-              line, strerror(errno));
-      exit(EXIT_FAILURE);
-   }
-
-   if (verbose) {
-      fprintf(stderr, "strndup(%zd, %zd) at %p from %s line %d\n",
-              strlen(s) + 1, n, p, func, line);
-   }
-
-   return p;
-}
-
-void _impishFree(void *s, const char *func, const int line)
-{
-   if (verbose) {
-      fprintf(stderr, "free(%p) from %s line %d\n", s, func, line);
-   }
-
-   free(s);
-}
-
-void impishMessage(const char *fmt, ...)
-{
-   if (verbose) {
-      va_list argp;
-
-      va_start(argp, fmt);
-      vprintf(fmt, argp);
-      va_end(argp);
-   }
 }
