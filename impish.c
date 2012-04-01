@@ -225,13 +225,16 @@ int parseLine(const char *const buf, int *argcPtr, char ***argvPtr)
    /* bind offset plus start buffer to form effective buffer,
     * this is needed due to the fact that buf is const qualified */
    const char *const ebuf = buf + bufStart;
+   const size_t ebufSize = strlen(ebuf);
 
    /* extract first token into argv[0] */
    if ((cpos = strchr(ebuf, ' '))) {
-      printf("length of first string: %i\n", (int)(cpos - ebuf));
+      impishMessage("calculated length of argv[0]: %i\n", (int)(cpos - ebuf));
       argv[0] = impishStrndup(ebuf, cpos - ebuf);
+      impishMessage("actual length of argv[0]: %i\n", strlen(argv[0]));
    } else {
       argv[0] = impishStrdup(ebuf);
+      impishMessage("length of argv[0]: %i\n", strlen(argv[0]));
    }
 
    /* extract the rest of the tokens into argv[i] for i >= 1 */
@@ -239,35 +242,43 @@ int parseLine(const char *const buf, int *argcPtr, char ***argvPtr)
    cpos = ebuf;
    while ((cpos = strchr(cpos, ' '))) {
 
+      /* skip to the next non-space */
+      while (isspace(*cpos)) {
+         impishMessage("skipping space at offset: %i\n", cpos - ebuf);
+         ++cpos;
+      }
+
       /* compute the length of the current token */
-      const char const *const npos = strchr(cpos + 1, ' ');
-      const int clen =
-          (npos) ? (npos - (cpos + 1)) : ((int)strlen(ebuf) -
-                                          ((cpos + 1) - ebuf));
+      /*   find the next space after the current position */
+      const char const *const npos = strchr(cpos, ' ');
+
+      /*   if there is a next space, the length is equal to the difference
+       *   between the next space and the current space,
+       *   otherwise this is the last argument so it's length is the 
+       *   size of the buffer minus the difference between the current
+       *   position and the start */
+      const int clen = (npos) ? (npos - cpos) : ((int)ebufSize - (cpos - ebuf));
 
       /* make sure argv is large enough */
-      /* TODO: wrap this this into a function */
       if (argc >= argvCap) {
          argvCap *= 2;
          argv = impishRealloc(argv, argvCap * sizeof(void *));
-         assert(argv);
       }
 
       /* copy the current token into the argument vector */
-      argv[argc] = impishStrndup(cpos + 1, (size_t) clen);
-      assert(argv[argc]);
-      ++argc;
+      impishMessage("the length of the current token is %i and contains %s\n",
+                    clen, cpos);
+      argv[argc++] = impishStrndup(cpos, (size_t) clen);
+      impishMessage("argv[%i] = %s\n", argc - 1, argv[argc - 1]);
 
       /* advance to the next character in buf */
       ++cpos;
    }
 
    /* NULL terminate argv */
-   /* TODO: wrap this this into a function */
    if (argc >= argvCap) {
       argvCap *= 2;
       argv = impishRealloc(argv, argvCap * sizeof(void *));
-      assert(argv);
    }
    argv[argc] = NULL;
 
