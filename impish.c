@@ -193,7 +193,7 @@ void parseLine(const char *const buf, int *argcPtr, char ***argvPtr)
    /* bind offset plus start buffer to form effective buffer,
     * this is needed due to the fact that buf is const qualified */
    const char *const ebuf = buf + bufStart;
-   const size_t ebufSize = strlen(ebuf);
+   const int ebufSize = strlen(ebuf);
 
    /* extract first token into argv[0] */
    if ((cpos = strchr(ebuf, ' '))) {
@@ -212,8 +212,13 @@ void parseLine(const char *const buf, int *argcPtr, char ***argvPtr)
 
       /* skip to the next non-space */
       while (isspace(*cpos)) {
-         impishMessage("skipping space at offset: %i\n", cpos - ebuf);
          ++cpos;
+      }
+
+      /* check to see if we've skipped to the end */
+      if (cpos - ebuf == ebufSize ) {
+         impishMessage("detected trailing whitespace... continuing\n");
+         continue;
       }
 
       /* compute the length of the current token */
