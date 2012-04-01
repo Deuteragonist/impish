@@ -83,6 +83,7 @@ void _impishFree(void *s, const char *func, const int line);
 
 void impishMessage(const char *fmt, ...);
 
+/* entry point */
 int main(int argc, char *argv[])
 {
    processArgs(argc, argv);
@@ -97,7 +98,7 @@ int main(int argc, char *argv[])
       }
    } while (cmdline && !feof(stdin));
 
-   return 0;
+   return EXIT_SUCCESS;
 }
 
 void processArgs(int argc, char *const argv[])
@@ -144,8 +145,6 @@ void eval(const char *const cmdline)
    int ret;
    int argc = 0;
    char **argv = NULL;
-
-   /* TODO: maybe remove leading trailing whitespace in place */
 
    ret = parseLine(cmdline, &argc, &argv);
 
