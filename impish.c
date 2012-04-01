@@ -57,7 +57,7 @@ bool verbose;
 /* main routines */
 void processArgs(int argc, char *const argv[]);
 void eval(const char *const cmdline);
-int parseLine(const char *const buf, int *argcPtr, char ***argvPtr);
+void parseLine(const char *const buf, int *argcPtr, char ***argvPtr);
 bool builtinCommand(const char *const *const argv);
 
 /* entry point */
@@ -82,7 +82,6 @@ void processArgs(int argc, char *const argv[])
 {
    int opt;
 
-   /* TODO: set flags */
    while ((opt = getopt(argc, argv, OPT_STRING)) != -1) {
       switch (opt) {
       case 'h':
@@ -119,11 +118,11 @@ void processArgs(int argc, char *const argv[])
 void eval(const char *const cmdline)
 {
    pid_t pid;
-   int ret;
    int argc = 0;
    char **argv = NULL;
+   int status;
 
-   ret = parseLine(cmdline, &argc, &argv);
+   parseLine(cmdline, &argc, &argv);
 
    if (argv == NULL || argv[0] == NULL) {
       impishFree(argv);
@@ -134,35 +133,28 @@ void eval(const char *const cmdline)
       return;
    }
 
-   /* if we were able to find a command */
-   /* TODO: devise a more transparent return machanism for parseLine */
-   if (ret != 1)
-      switch (pid = fork()) {
-      case 0:
-         if (execvp(argv[0], argv) == -1) {
-            fprintf(stderr,
-                    "%s: Command execution failed: %s\n",
-                    argv[0], strerror(errno));
+   /* TODO: handle forking to the background */
+   switch (pid = fork()) {
+   case 0:
+      if (execvp(argv[0], argv) == -1) {
+         fprintf(stderr,
+                 "%s: Command execution failed: %s\n",
+                 argv[0], strerror(errno));
 
-            /* TODO: return something different here */
-            exit(EXIT_SUCCESS);
-         }
-
-      case -1:
-         perror("fork");
-         exit(EXIT_FAILURE);
-
-      default:
-         if (!ret) {
-            int status;
-            if (waitpid(pid, &status, 0) < 0) {
-               perror("waitpid");
-            }
-         } else {
-            printf("%d %s", pid, cmdline);
-         }
-         break;
+         /* TODO: return something different here */
+         exit(EXIT_SUCCESS);
       }
+
+   case -1:
+      perror("fork");
+      exit(EXIT_FAILURE);
+
+   default:
+      if (waitpid(pid, &status, 0) < 0) {
+         perror("waitpid");
+      }
+      break;
+   }
 
    /* free all of the memory allocated by parseLine */
    for (int i = 0; i < argc; ++i) {
@@ -185,7 +177,7 @@ bool builtinCommand(const char *const *const argv)
    return false;
 }
 
-int parseLine(const char *const buf, int *argcPtr, char ***argvPtr)
+void parseLine(const char *const buf, int *argcPtr, char ***argvPtr)
 {
    static const int ARGV_INIT_CAPACITY = 16;
 
@@ -261,6 +253,4 @@ int parseLine(const char *const buf, int *argcPtr, char ***argvPtr)
    /* copy argc and argv back to caller (pass by value-return) */
    *argcPtr = argc;
    *argvPtr = argv;
-
-   return 0;
 }
