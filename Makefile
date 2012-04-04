@@ -15,8 +15,8 @@
 
 CC=gcc
 RM=rm
-SRC=impish.c util.c
-INC=impish.h util.h
+SRC=impish.c util.c sighandlers.c
+INC=impish.h util.h sighandlers.h
 CFLAGS=-std=c99 -D_XOPEN_SOURCE=700 -D_ISOC99_SOURCE -Wall -Wextra -pedantic
 LDFLAGS=-lreadline
 DFLAGS=-g

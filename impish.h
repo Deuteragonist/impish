@@ -16,6 +16,9 @@
 #ifndef IMPISH_H
 #define IMPISH_H
 
+#include <stdbool.h>
+
+#define ARRAY_SIZE(x) (sizeof (x) / sizeof *(x))
 extern bool verbose;
 
 #endif

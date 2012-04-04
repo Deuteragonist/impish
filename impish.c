@@ -33,6 +33,7 @@
 
 #include "impish.h"
 #include "util.h"
+#include "sighandlers.h"
 
 /* linker directives for library globals */
 extern char **environ;
@@ -59,11 +60,13 @@ void processArgs(int argc, char *const argv[]);
 void eval(const char *const cmdline);
 void parseLine(const char *const buf, int *argcPtr, char ***argvPtr);
 bool builtinCommand(const char *const *const argv);
+void installSignalHandlers();
 
 /* entry point */
 int main(int argc, char *argv[])
 {
    processArgs(argc, argv);
+   installSignalHandlers();
 
    char *cmdline;
    do {
@@ -82,6 +85,7 @@ void processArgs(int argc, char *const argv[])
 {
    int opt;
 
+   /* Option parsing loop */
    while ((opt = getopt(argc, argv, OPT_STRING)) != -1) {
       switch (opt) {
       case 'h':
@@ -162,7 +166,8 @@ void eval(const char *const cmdline)
 
          /* Print messages back based on the status */
          if (WIFEXITED(status) && status != EXIT_SUCCESS) {
-            printf("warning: child exited abnormally with status = %d\n", WEXITSTATUS(status));
+            printf("warning: child exited abnormally with status = %d\n",
+                   WEXITSTATUS(status));
          } else if (WIFSIGNALED(status)) {
             printf("warning: child killed by signal = %d\n", WTERMSIG(status));
          } else if (WIFSTOPPED(status)) {
@@ -278,4 +283,109 @@ void parseLine(const char *const buf, int *argcPtr, char ***argvPtr)
    /* copy argc and argv back to caller (pass by value-return) */
    *argcPtr = argc;
    *argvPtr = argv;
+}
+
+void installSignalHandlers()
+{
+   /* initialize an array of sigaction structs coupled with their 
+    * intended signal */
+   static struct {
+      int sig;
+      struct sigaction handler;
+   } sigStructs[] = {
+      {
+        .sig = SIGHUP,
+          .handler = {
+          .sa_sigaction = sigHUPAction,
+          .sa_flags = SA_SIGINFO,
+          .sa_restorer = NULL}
+      },
+      {
+        .sig = SIGINT,
+        .handler = {
+          .sa_sigaction = sigINTAction,
+          .sa_flags = SA_SIGINFO,
+          .sa_restorer = NULL}
+      },
+      {
+        .sig = SIGQUIT,
+        .handler = {
+          .sa_sigaction = sigQUITAction,
+          .sa_flags = SA_SIGINFO,
+          .sa_restorer = NULL}
+      }, 
+      {
+        .sig = SIGILL,
+        .handler = {
+          .sa_sigaction = sigILLAction,
+          .sa_flags = SA_SIGINFO,
+          .sa_restorer = NULL}
+      },
+      {
+        .sig = SIGTRAP,
+        .handler = {
+          .sa_sigaction = sigTRAPAction,
+          .sa_flags = SA_SIGINFO,
+          .sa_restorer = NULL}
+      }, 
+      {
+        .sig = SIGABRT,
+        .handler = {
+          .sa_sigaction = sigABRTAction,
+          .sa_flags = SA_SIGINFO,
+          .sa_restorer = NULL}
+      }, 
+      {
+        .sig = SIGFPE,
+        .handler = {
+          .sa_sigaction = sigFPEAction,
+          .sa_flags = SA_SIGINFO,
+          .sa_restorer = NULL}
+      },
+      {
+        .sig = SIGSEGV,
+        .handler = {
+          .sa_sigaction = sigSEGVAction,
+          .sa_flags = SA_SIGINFO,
+          .sa_restorer = NULL}
+      }, 
+      {
+        .sig = SIGPIPE,
+        .handler = {
+          .sa_sigaction = sigPIPEAction,
+          .sa_flags = SA_SIGINFO,
+          .sa_restorer = NULL}
+      }, 
+      {
+        .sig = SIGALRM,
+        .handler = {
+          .sa_sigaction = sigALRMAction,
+          .sa_flags = SA_SIGINFO,
+          .sa_restorer = NULL}
+      }, 
+      {
+        .sig = SIGTERM,
+        .handler = {
+          .sa_sigaction = sigTERMAction,
+          .sa_flags = SA_SIGINFO,
+          .sa_restorer = NULL}
+      }, 
+      {
+        .sig = SIGCHLD,
+        .handler = {
+          .sa_sigaction = sigCHLDAction,
+          .sa_flags = SA_SIGINFO,
+          .sa_restorer = NULL}
+      }
+   };
+
+   for (size_t i = 0; i < ARRAY_SIZE(sigStructs); i++) {
+      if (sigaction(sigStructs[i].sig,
+                    (const struct sigaction * restrict)&sigStructs[i].handler,
+                    NULL) < 0) {
+         fprintf(stderr,
+                 "warning: failed to install signal handler for signal: %i: %s\n",
+                 sigStructs[i].sig, strerror(errno));
+      }
+   }
 }
