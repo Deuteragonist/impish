@@ -22,7 +22,6 @@ LDFLAGS=-lreadline
 DFLAGS=-g
 RFLAGS=-DNDEBUG -O2
 OUT=impish
-IFLAGS=-i3 -nut -linux
 SIZE=size
 INSTALL=install
 PREFIX=/usr/local/bin

@@ -37,63 +37,58 @@
 #include "util.h"
 #include "sighandlers.h"
 
-/*
- * linker directives for library globals
- *
- * extern char **environ;
- * extern char *optarg;
- * extern int optind, opterr, optopt;
- */
-
 /* read-only module-only globals */
 static const char DEFAULT_PROMPT[] = ">> ";
 static const char OPT_STRING[] = "hvVies:";
 static const char USAGE_STRING[] =
-      "Usage:  impish [-h] [-v] [-i] [-e] [-s f] [file]\n"
-      " -h     help\n"
-      " -v     verbose mode\n"
-      " -i     interactive mode\n"
-      " -e     echo commands before execution\n"
-      " -s f   use startup file f, default impish.init\n"
-      " Shell commands:\n" "  help \n";
+      "Usage:  impish [-h] [-v] [-V] [-i] [-e] [-s f] [file]\n"
+            " -h     help\n"
+            " -v     verbose mode\n"
+            " -V     print version information and exit"
+            " -i     interactive mode\n"
+            " -e     echo commands before execution\n"
+            " -s f   use startup file f, default impish.init\n"
+            " Shell commands:\n" "  help \n";
 
-/* read/write globals */
-bool verbose;
+/* TODO: rework the above declaration to omit whitespace
+ * and line continuation, making the appropriate changes
+ * where it gets passed to printf */
+
+/* read/write globals */bool verbose;
 
 /* read-only globals */
-const int IMPISH_VERSION_NUMS[] = {0, 0, 4};
+const int IMPISH_VERSION_NUMS[] = { 0, 0, 4 };
 
-/* functions protoyped in impish.h */
+/* functions prototyped in impish.h */
 void printVersion() {
    printf("impish v%d.%d.%d\ncompiled on %s at %s\n",
          IMPISH_VERSION_NUMS[0],
          IMPISH_VERSION_NUMS[1],
-         IMPISH_VERSION_NUMS[2],
-         __DATE__,
-         __TIME__);
+         IMPISH_VERSION_NUMS[2], __DATE__, __TIME__);
 
-   printf("C standard supported:  %zd\n",
-         __STDC_VERSION__);
+   printf("C standard supported:  %zd\n", __STDC_VERSION__);
 }
 
 /* functions defined in this file */
-void processArgs(int argc, char *const argv[]);
-void eval(const char *const cmdline);
-void parseLine(const char *const buf, int *argcPtr, char ***argvPtr);
-bool builtinCommand(const char *const *const argv);
+void processArgs(int argc, char * const argv[]);
+void eval(const char * const cmdline);
+void parseLine(const char * const buf, int *argcPtr, char ***argvPtr);
+bool builtinCommand(const char * const * const argv);
 void installSignalHandlers();
 void exitHandler();
 
 /* entry point */
 int main(int argc, char *argv[])
 {
+   /* initialization */
    processArgs(argc, argv);
    installSignalHandlers();
 
-   if(atexit(exitHandler) != 0) {
+   if (atexit(exitHandler) != 0) {
       printf("warning: failed to install exit handler\n");
    }
 
+   /* main loop: read - eval - print */
    char *cmdline;
    do {
       cmdline = readline(DEFAULT_PROMPT);
@@ -103,6 +98,8 @@ int main(int argc, char *argv[])
          impishFree(cmdline);
       }
    } while (cmdline && !feof(stdin));
+
+   /* TODO: cleanup? */
 
    return EXIT_SUCCESS;
 }
@@ -127,14 +124,9 @@ void processArgs(int argc, char *const argv[])
          exit(EXIT_SUCCESS);
 
       case 'i':
-         /* TODO: set a flag */
-         break;
-
       case 'e':
-         /* TODO: set a flag */
-         break;
-
       case 's':
+         fprintf(stderr, "warning: flag unimplemented");
          /* TODO: set a flag */
          break;
 
@@ -163,17 +155,20 @@ void eval(const char *const cmdline)
       return;
    }
 
-   if (builtinCommand((const char *const *const)argv)) {
+   if (builtinCommand((const char * const * const ) argv)) {
       return;
    }
 
    /* TODO: handle forking to the background */
    switch (pid = fork()) {
+   case -1:
+      perror("fork");
+      exit(EXIT_FAILURE);
+
    case 0:
       if (execvp(argv[0], argv) == -1) {
-         fprintf(stderr,
-               "%s: Command execution failed: %s\n",
-               argv[0], strerror(errno));
+         fprintf(stderr, "%s: Command execution failed: %s\n", argv[0],
+               strerror(errno));
 
          /* TODO: return something different here */
          exit(EXIT_SUCCESS);
@@ -181,10 +176,6 @@ void eval(const char *const cmdline)
          fprintf(stderr, "warning: strange execvp() behavior");
          break;
       }
-
-   case -1:
-      perror("fork");
-      exit(EXIT_FAILURE);
 
    default:
       /* Interact with the child via signals */
@@ -201,12 +192,16 @@ void eval(const char *const cmdline)
          if (WIFEXITED(status) && status != EXIT_SUCCESS) {
             printf("warning: child exited abnormally with status = %d\n",
                   WEXITSTATUS(status));
+
          } else if (WIFSIGNALED(status)) {
             printf("warning: child killed by signal = %d\n", WTERMSIG(status));
+
          } else if (WIFSTOPPED(status)) {
             printf("warning: child stopped by signal = %d\n", WSTOPSIG(status));
+
          } else if (WIFCONTINUED(status)) {
             printf("child continued\n");
+
          }
       } while (!WIFEXITED(status) && !WIFSIGNALED(status));
 
@@ -219,12 +214,14 @@ void eval(const char *const cmdline)
    }
 
    impishFree(argv);
-
 }
 
-/* function returns true if the command was builtin */
+/* builtinCommand(..) returns true if the command was built in,
+ * but should also be communicating some other data back to the
+ * caller, i.e. whether the process should be wait()ed for or not */
+
 /* TODO: encode data which needs to be communicated to
- * the fork-exec stanza */
+ * the fork-exec stanza (see above comment) */
 bool builtinCommand(const char *const *const argv)
 {
    if (!strcmp(argv[0], "quit") || !strcmp(argv[0],"exit")) {
@@ -244,7 +241,7 @@ void parseLine(const char *const buf, int *argcPtr, char ***argvPtr)
 
    int argc = 0;
    int argvCap = ARGV_INIT_CAPACITY;
-   char const *cpos = NULL;     /* chars that cpos points to are read only */
+   char const *cpos = NULL;     /* chars that cpos point to are read only */
    char **argv = impishMalloc(argvCap * sizeof(void *));
    int bufStart;
 
@@ -309,7 +306,8 @@ void parseLine(const char *const buf, int *argcPtr, char ***argvPtr)
       ++cpos;
    }
 
-   /* NULL terminate argv */
+   /* NULL terminate the argument vector, first ensuring that there
+    * exists sufficient size for the null pointer entry */
    if (argc >= argvCap) {
       argvCap *= 2;
       argv = impishRealloc(argv, argvCap * sizeof(void *));
@@ -330,85 +328,25 @@ void installSignalHandlers()
       int sig;
       struct sigaction handler;
    } sigStructs[] = {
-         {
-               .sig = SIGHUP,
-               .handler = {
-                     .sa_sigaction = sigHUPAction
-               }
-         },
-         {
-               .sig = SIGINT,
-               .handler = {
-                     .sa_sigaction = sigINTAction
-               }
-         },
-         {
-               .sig = SIGQUIT,
-               .handler = {
-                     .sa_sigaction = sigQUITAction
-               }
-         },
-         {
-               .sig = SIGILL,
-               .handler = {
-                     .sa_sigaction = sigILLAction
-               }
-         },
-         {
-               .sig = SIGTRAP,
-               .handler = {
-                     .sa_sigaction = sigTRAPAction
-               }
-         },
-         {
-               .sig = SIGABRT,
-               .handler = {
-                     .sa_sigaction = sigABRTAction
-               }
-         },
-         {
-               .sig = SIGFPE,
-               .handler = {
-                     .sa_sigaction = sigFPEAction
-               }
-         },
-         {
-               .sig = SIGSEGV,
-               .handler = {
-                     .sa_sigaction = sigSEGVAction
-               }
-         },
-         {
-               .sig = SIGPIPE,
-               .handler = {
-                     .sa_sigaction = sigPIPEAction
-               }
-         },
-         {
-               .sig = SIGALRM,
-               .handler = {
-                     .sa_sigaction = sigALRMAction
-               }
-         },
-         {
-               .sig = SIGTERM,
-               .handler = {
-                     .sa_sigaction = sigTERMAction
-               }
-         },
-         {
-               .sig = SIGCHLD,
-               .handler = {
-                     .sa_sigaction = sigCHLDAction
-               }
-         }
+         { .sig = SIGHUP,  .handler = { .sa_sigaction = sigHUPAction  } },
+         { .sig = SIGINT,  .handler = { .sa_sigaction = sigINTAction  } },
+         { .sig = SIGQUIT, .handler = { .sa_sigaction = sigQUITAction } },
+         { .sig = SIGILL,  .handler = { .sa_sigaction = sigILLAction  } },
+         { .sig = SIGTRAP, .handler = { .sa_sigaction = sigTRAPAction } },
+         { .sig = SIGABRT, .handler = { .sa_sigaction = sigABRTAction } },
+         { .sig = SIGFPE,  .handler = { .sa_sigaction = sigFPEAction  } },
+         { .sig = SIGSEGV, .handler = { .sa_sigaction = sigSEGVAction } },
+         { .sig = SIGPIPE, .handler = { .sa_sigaction = sigPIPEAction } },
+         { .sig = SIGALRM, .handler = { .sa_sigaction = sigALRMAction } },
+         { .sig = SIGTERM, .handler = { .sa_sigaction = sigTERMAction } },
+         { .sig = SIGCHLD, .handler = { .sa_sigaction = sigCHLDAction } }
    };
 
    /* allocate the loop invariant */
    sigset_t eSet;
    sigemptyset(&eSet);
 
-   /* call sigaction on each of the values defined in the struct */
+   /* call sigaction() on each of the values defined in the struct above */
    for (size_t i = 0; i < ARRAY_SIZE(sigStructs); i++) {
       /* copy the current signal struct into cStruct */
       struct sigaction cStruct = sigStructs[i].handler;
@@ -417,7 +355,7 @@ void installSignalHandlers()
       cStruct.sa_mask = eSet;
       cStruct.sa_flags = IMPISH_SA_FLAGS;
 
-      /* call sigaction */
+      /* call sigaction(), warning on failure */
       if (sigaction(sigStructs[i].sig,
             (const struct sigaction * restrict)& cStruct,
             NULL) < 0) {
@@ -431,5 +369,6 @@ void installSignalHandlers()
 }
 
 void exitHandler() {
+   /* TODO: do some post-execution checks */
    printf("\n\nbye.\n");
 }

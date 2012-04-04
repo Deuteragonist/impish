@@ -31,19 +31,38 @@
 #define impishFree(s)              _impishFree(s,            __func__, __LINE__)
 
 /* utility functions/wrappers */
-void _impishVerify(const bool tf,
-      const char *msg, const char *func, const int line);
-
-void *_impishMalloc(const size_t size, const char *func, const int line);
-
-void *_impishRealloc(void *ptr,
-      const size_t size, const char *func, const int line);
-
-char *_impishStrdup(const char *s, const char *func, const int line);
-char *_impishStrndup(const char *s, const size_t n, const char *func,
+void _impishVerify(
+      const bool tf,
+      const char *msg,
+      const char *func,
       const int line);
 
-void _impishFree(void *s, const char *func, const int line);
+void *_impishMalloc(
+      const size_t size,
+      const char *func,
+      const int line);
+
+void *_impishRealloc(
+      void *ptr,
+      const size_t size,
+      const char *func,
+      const int line);
+
+char *_impishStrdup(
+      const char *s,
+      const char *func,
+      const int line);
+
+char *_impishStrndup(
+      const char *s,
+      const size_t n,
+      const char *func,
+      const int line);
+
+void _impishFree(
+      void *s,
+      const char *func,
+      const int line);
 
 void impishMessage(const char *fmt, ...);
 

@@ -27,8 +27,12 @@
 #include "impish.h"
 #include "util.h"
 
-/* taken from heller c2html example */
-void _impishVerify(const bool tf, const char *msg, const char *func,
+/* macro expansion style copied from heller c2html example found at
+ * http://www.cse.psu.edu/~dheller/cmpsc311/Demos/c2html/c2html.html */
+void _impishVerify(
+      const bool tf,
+      const char *msg,
+      const char *func,
       const int line)
 {
    if (tf == false) {
@@ -37,47 +41,56 @@ void _impishVerify(const bool tf, const char *msg, const char *func,
    }
 }
 
-void *_impishMalloc(const size_t size, const char *func, const int line)
+void *_impishMalloc(
+      const size_t size,
+      const char *func,
+      const int line)
 {
    void *p = malloc(size);
    if (p == NULL) {
-      fprintf(stderr, "%s() at line %d failed: malloc(): %s\n", func,
-            line, strerror(errno));
+      fprintf(stderr, "%s() at line %d failed: malloc(): %s\n",
+            func, line, strerror(errno));
       exit(EXIT_FAILURE);
    }
 
    if (verbose) {
-      fprintf(stderr, "malloc(%zd) at %p from %s line %d\n", size, p,
-            func, line);
+      fprintf(stderr, "malloc(%zd) at %p from %s line %d\n",
+            size, p, func, line);
    }
 
    return p;
 }
 
-void *_impishRealloc(void *ptr, const size_t size, const char *func,
+void *_impishRealloc(
+      void *ptr,
+      const size_t size,
+      const char *func,
       const int line)
 {
    void *p = realloc(ptr, size);
    if (p == NULL) {
-      fprintf(stderr, "%s() at line %d failed: realloc(): %s\n", func,
-            line, strerror(errno));
+      fprintf(stderr, "%s() at line %d failed: realloc(): %s\n",
+            func, line, strerror(errno));
       exit(EXIT_FAILURE);
    }
 
    if (verbose) {
-      fprintf(stderr, "realloc(%p, %zd) at %p from %s line %d\n", ptr, size, p,
-            func, line);
+      fprintf(stderr, "realloc(%p, %zd) at %p from %s line %d\n",
+            ptr, size, p, func, line);
    }
 
    return p;
 }
 
-char *_impishStrdup(const char *s, const char *func, const int line)
+char *_impishStrdup(
+      const char *s,
+      const char *func,
+      const int line)
 {
    char *p = strdup(s);
    if (p == NULL) {
-      fprintf(stderr, "%s() at line %d failed: strdup(): %s\n", func,
-            line, strerror(errno));
+      fprintf(stderr, "%s() at line %d failed: strdup(): %s\n",
+            func, line, strerror(errno));
       exit(EXIT_FAILURE);
    }
 
@@ -89,7 +102,10 @@ char *_impishStrdup(const char *s, const char *func, const int line)
    return p;
 }
 
-char *_impishStrndup(const char *s, const size_t n, const char *func,
+char *_impishStrndup(
+      const char *s,
+      const size_t n,
+      const char *func,
       const int line)
 {
    size_t slen;
@@ -140,7 +156,10 @@ char *_impishStrndup(const char *s, const size_t n, const char *func,
    return ptr;
 }
 
-void _impishFree(void *s, const char *func, const int line)
+void _impishFree(
+      void *s,
+      const char *func,
+      const int line)
 {
    if (verbose) {
       fprintf(stderr, "free(%p) from %s line %d\n", s, func, line);

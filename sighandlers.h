@@ -21,19 +21,19 @@
 #include <signal.h>
 #include <unistd.h>
 
-void sigHUPAction(int sig, siginfo_t * siginfo, void *ctx);
-void sigINTAction(int sig, siginfo_t * siginfo, void *ctx);
-void sigQUITAction(int sig, siginfo_t * siginfo, void *ctx);
-void sigILLAction(int sig, siginfo_t * siginfo, void *ctx);
-void sigTRAPAction(int sig, siginfo_t * siginfo, void *ctx);
-void sigABRTAction(int sig, siginfo_t * siginfo, void *ctx);
-void sigFPEAction(int sig, siginfo_t * siginfo, void *ctx);
-void sigKILLAction(int sig, siginfo_t * siginfo, void *ctx);
-void sigSEGVAction(int sig, siginfo_t * siginfo, void *ctx);
-void sigSYSAction(int sig, siginfo_t * siginfo, void *ctx);
-void sigPIPEAction(int sig, siginfo_t * siginfo, void *ctx);
-void sigALRMAction(int sig, siginfo_t * siginfo, void *ctx);
-void sigTERMAction(int sig, siginfo_t * siginfo, void *ctx);
-void sigCHLDAction(int sig, siginfo_t * siginfo, void *ctx);
+void sigHUPAction  (int sig, siginfo_t * siginfo, void *ctx);
+void sigINTAction  (int sig, siginfo_t * siginfo, void *ctx);
+void sigQUITAction (int sig, siginfo_t * siginfo, void *ctx);
+void sigILLAction  (int sig, siginfo_t * siginfo, void *ctx);
+void sigTRAPAction (int sig, siginfo_t * siginfo, void *ctx);
+void sigABRTAction (int sig, siginfo_t * siginfo, void *ctx);
+void sigFPEAction  (int sig, siginfo_t * siginfo, void *ctx);
+void sigKILLAction (int sig, siginfo_t * siginfo, void *ctx);
+void sigSEGVAction (int sig, siginfo_t * siginfo, void *ctx);
+void sigSYSAction  (int sig, siginfo_t * siginfo, void *ctx);
+void sigPIPEAction (int sig, siginfo_t * siginfo, void *ctx);
+void sigALRMAction (int sig, siginfo_t * siginfo, void *ctx);
+void sigTERMAction (int sig, siginfo_t * siginfo, void *ctx);
+void sigCHLDAction (int sig, siginfo_t * siginfo, void *ctx);
 
 #endif /* IMPISG_SIG_HANDLERS_H */
