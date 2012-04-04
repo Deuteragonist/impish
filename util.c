@@ -21,6 +21,7 @@
 #include <stdbool.h>
 #include <string.h>
 #include <errno.h>
+#include <ctype.h>
 
 #include "impish.h"
 #include "util.h"
