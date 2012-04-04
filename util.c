@@ -28,7 +28,7 @@
 
 /* taken from heller c2html example */
 void _impishVerify(const bool tf, const char *msg, const char *func,
-                   const int line)
+      const int line)
 {
    if (tf == false) {
       fprintf(stderr, "%s() at line %d failed: %s\n", func, line, msg);
@@ -41,31 +41,31 @@ void *_impishMalloc(const size_t size, const char *func, const int line)
    void *p = malloc(size);
    if (p == NULL) {
       fprintf(stderr, "%s() at line %d failed: malloc(): %s\n", func,
-              line, strerror(errno));
+            line, strerror(errno));
       exit(EXIT_FAILURE);
    }
 
    if (verbose) {
       fprintf(stderr, "malloc(%zd) at %p from %s line %d\n", size, p,
-              func, line);
+            func, line);
    }
 
    return p;
 }
 
 void *_impishRealloc(void *ptr, const size_t size, const char *func,
-                     const int line)
+      const int line)
 {
    void *p = realloc(ptr, size);
    if (p == NULL) {
       fprintf(stderr, "%s() at line %d failed: realloc(): %s\n", func,
-              line, strerror(errno));
+            line, strerror(errno));
       exit(EXIT_FAILURE);
    }
 
    if (verbose) {
       fprintf(stderr, "realloc(%p, %zd) at %p from %s line %d\n", ptr, size, p,
-              func, line);
+            func, line);
    }
 
    return p;
@@ -76,34 +76,67 @@ char *_impishStrdup(const char *s, const char *func, const int line)
    char *p = strdup(s);
    if (p == NULL) {
       fprintf(stderr, "%s() at line %d failed: strdup(): %s\n", func,
-              line, strerror(errno));
+            line, strerror(errno));
       exit(EXIT_FAILURE);
    }
 
    if (verbose) {
       fprintf(stderr, "strdup(%zd) at %p from %s line %d\n",
-              strlen(s) + 1, p, func, line);
+            strlen(s) + 1, p, func, line);
    }
 
    return p;
 }
 
 char *_impishStrndup(const char *s, const size_t n, const char *func,
-                     const int line)
+      const int line)
 {
-   char *p = strndup(s, n);
-   if (p == NULL) {
+   size_t slen;
+   size_t copyLen;
+   char *ptr;
+
+#ifdef __APPLE__
+   slen = strlen(s);
+   ptr = memchr(s, '\0', n);
+
+   /* p contains the fist occurrence of a null byte in s,
+    * or NULL if there is no such occurrence.
+    * If p is NULL then we use either n or the length
+    * of s, depending on which is smaller, to calculate
+    * how many characters we're going to copy from s.
+    * If p is non-NULL, we can subtract s from p,
+    * which gives the length of the string we need to copy.
+    */
+   if(ptr == NULL ) {
+      copyLen = ( n < slen ) ? ( n ) : ( slen );
+   } else {
+      copyLen = (size_t) (ptr - s);
+   }
+
+   /* we add one to account for the NULL terminator */
+   ptr = impishMalloc(copyLen+1);
+   memcpy(ptr, s, copyLen);
+
+   /* and NULL terminate the resulting string */
+   ptr[copyLen] = '\0';
+#else
+   (void)slen;
+   (void)copyLen;
+   ptr = strndup(s, n);
+
+   if (ptr == NULL) {
       fprintf(stderr, "%s() at line %d failed: strndup(): %s\n", func,
-              line, strerror(errno));
+            line, strerror(errno));
       exit(EXIT_FAILURE);
    }
+#endif
 
    if (verbose) {
       fprintf(stderr, "strndup(%zd, %zd) at %p from %s line %d\n",
-              strlen(s) + 1, n, p, func, line);
+            strlen(s) + 1, n, ptr, func, line);
    }
 
-   return p;
+   return ptr;
 }
 
 void _impishFree(void *s, const char *func, const int line)

@@ -23,6 +23,7 @@
 #include <stddef.h>
 #include <string.h>
 #include <stdarg.h>
+#include <ctype.h>
 
 #include <errno.h>
 #include <signal.h>
@@ -44,13 +45,13 @@ extern int optind, opterr, optopt;
 static const char DEFAULT_PROMPT[] = ">> ";
 static const char OPT_STRING[] = "hvVies:";
 static const char USAGE_STRING[] =
-    "Usage:  impish [-h] [-v] [-i] [-e] [-s f] [file]\n"
-    " -h     help\n"
-    " -v     verbose mode\n"
-    " -i     interactive mode\n"
-    " -e     echo commands before execution\n"
-    " -s f   use startup file f, default impish.init\n"
-    " Shell commands:\n" "  help \n";
+      "Usage:  impish [-h] [-v] [-i] [-e] [-s f] [file]\n"
+      " -h     help\n"
+      " -v     verbose mode\n"
+      " -i     interactive mode\n"
+      " -e     echo commands before execution\n"
+      " -s f   use startup file f, default impish.init\n"
+      " Shell commands:\n" "  help \n";
 
 /* read/write globals */
 bool verbose;
@@ -60,15 +61,15 @@ const int IMPISH_VERSION_NUMS[] = {0, 0, 3};
 
 /* functions protoyped in impish.h */
 void printVersion() {
-  printf("impish v%d.%d.%d compiled on %s at %s\n",
-    IMPISH_VERSION_NUMS[0],
-    IMPISH_VERSION_NUMS[1],
-    IMPISH_VERSION_NUMS[2],
-    __DATE__,
-    __TIME__);
+   printf("impish v%d.%d.%d compiled on %s at %s\n",
+         IMPISH_VERSION_NUMS[0],
+         IMPISH_VERSION_NUMS[1],
+         IMPISH_VERSION_NUMS[2],
+         __DATE__,
+         __TIME__);
 
- printf("C standard supported:  %zd\n", 
-    __STDC_VERSION__); 
+   printf("C standard supported:  %zd\n",
+         __STDC_VERSION__);
 }
 
 /* functions defined in this file */
@@ -84,9 +85,9 @@ int main(int argc, char *argv[])
 {
    processArgs(argc, argv);
    installSignalHandlers();
-   
+
    if(atexit(exitHandler) != 0) {
-     printf("warning: failed to install exit handler\n");
+      printf("warning: failed to install exit handler\n");
    }
 
    char *cmdline;
@@ -167,8 +168,8 @@ void eval(const char *const cmdline)
    case 0:
       if (execvp(argv[0], argv) == -1) {
          fprintf(stderr,
-                 "%s: Command execution failed: %s\n",
-                 argv[0], strerror(errno));
+               "%s: Command execution failed: %s\n",
+               argv[0], strerror(errno));
 
          /* TODO: return something different here */
          exit(EXIT_SUCCESS);
@@ -192,7 +193,7 @@ void eval(const char *const cmdline)
          /* Print messages back based on the status */
          if (WIFEXITED(status) && status != EXIT_SUCCESS) {
             printf("warning: child exited abnormally with status = %d\n",
-                   WEXITSTATUS(status));
+                  WEXITSTATUS(status));
          } else if (WIFSIGNALED(status)) {
             printf("warning: child killed by signal = %d\n", WTERMSIG(status));
          } else if (WIFSTOPPED(status)) {
@@ -293,7 +294,7 @@ void parseLine(const char *const buf, int *argcPtr, char ***argvPtr)
 
       /* copy the current token into the argument vector */
       impishMessage("the length of the current token is %i and contains %s\n",
-                    clen, cpos);
+            clen, cpos);
       argv[argc++] = impishStrndup(cpos, (size_t) clen);
       impishMessage("argv[%i] = %s\n", argc - 1, argv[argc - 1]);
 
@@ -322,78 +323,78 @@ void installSignalHandlers()
       int sig;
       struct sigaction handler;
    } sigStructs[] = {
-      {
-        .sig = SIGHUP,
-          .handler = {
-          .sa_sigaction = sigHUPAction
-          }
-      },
-      {
-        .sig = SIGINT,
-        .handler = {
-          .sa_sigaction = sigINTAction
-        }
-      },
-      {
-        .sig = SIGQUIT,
-        .handler = {
-          .sa_sigaction = sigQUITAction
-        }
-      }, 
-      {
-        .sig = SIGILL,
-        .handler = {
-          .sa_sigaction = sigILLAction
-        }
-      },
-      {
-        .sig = SIGTRAP,
-        .handler = {
-          .sa_sigaction = sigTRAPAction
-        }
-      }, 
-      {
-        .sig = SIGABRT,
-        .handler = {
-          .sa_sigaction = sigABRTAction
-        }
-      }, 
-      {
-        .sig = SIGFPE,
-        .handler = {
-          .sa_sigaction = sigFPEAction
-        }
-      },
-      {
-        .sig = SIGSEGV,
-        .handler = {
-          .sa_sigaction = sigSEGVAction
-        }
-      }, 
-      {
-        .sig = SIGPIPE,
-        .handler = {
-          .sa_sigaction = sigPIPEAction
-        }
-      }, 
-      {
-        .sig = SIGALRM,
-        .handler = {
-          .sa_sigaction = sigALRMAction
-        }
-      }, 
-      {
-        .sig = SIGTERM,
-        .handler = {
-          .sa_sigaction = sigTERMAction
-        }
-      }, 
-      {
-        .sig = SIGCHLD,
-        .handler = {
-          .sa_sigaction = sigCHLDAction
-        }
-      }
+         {
+               .sig = SIGHUP,
+               .handler = {
+                     .sa_sigaction = sigHUPAction
+               }
+         },
+         {
+               .sig = SIGINT,
+               .handler = {
+                     .sa_sigaction = sigINTAction
+               }
+         },
+         {
+               .sig = SIGQUIT,
+               .handler = {
+                     .sa_sigaction = sigQUITAction
+               }
+         },
+         {
+               .sig = SIGILL,
+               .handler = {
+                     .sa_sigaction = sigILLAction
+               }
+         },
+         {
+               .sig = SIGTRAP,
+               .handler = {
+                     .sa_sigaction = sigTRAPAction
+               }
+         },
+         {
+               .sig = SIGABRT,
+               .handler = {
+                     .sa_sigaction = sigABRTAction
+               }
+         },
+         {
+               .sig = SIGFPE,
+               .handler = {
+                     .sa_sigaction = sigFPEAction
+               }
+         },
+         {
+               .sig = SIGSEGV,
+               .handler = {
+                     .sa_sigaction = sigSEGVAction
+               }
+         },
+         {
+               .sig = SIGPIPE,
+               .handler = {
+                     .sa_sigaction = sigPIPEAction
+               }
+         },
+         {
+               .sig = SIGALRM,
+               .handler = {
+                     .sa_sigaction = sigALRMAction
+               }
+         },
+         {
+               .sig = SIGTERM,
+               .handler = {
+                     .sa_sigaction = sigTERMAction
+               }
+         },
+         {
+               .sig = SIGCHLD,
+               .handler = {
+                     .sa_sigaction = sigCHLDAction
+               }
+         }
    };
 
    /* allocate the loop invariant */
@@ -407,22 +408,21 @@ void installSignalHandlers()
 
       /* write the list-global params */
       cStruct.sa_mask = eSet;
-      cStruct.sa_restorer = NULL; 
       cStruct.sa_flags = IMPISH_SA_FLAGS;
 
       /* call sigaction */
       if (sigaction(sigStructs[i].sig,
-                    (const struct sigaction * restrict)& cStruct,
-                    NULL) < 0) {
+            (const struct sigaction * restrict)& cStruct,
+            NULL) < 0) {
          fprintf(stderr,
-                 "warning: failed to install signal handler for signal: %i: %s\n",
-                 sigStructs[i].sig, strerror(errno));
+               "warning: failed to install signal handler for signal: %i: %s\n",
+               sigStructs[i].sig, strerror(errno));
       } else {
-        impishMessage("installed handler for signal: %i\n", sigStructs[i].sig);
+         impishMessage("installed handler for signal: %i\n", sigStructs[i].sig);
       }
    }
 }
 
 void exitHandler() {
-  printf("\n\nbye.\n");
+   printf("\n\nbye.\n");
 }
