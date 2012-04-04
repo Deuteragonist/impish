@@ -22,7 +22,6 @@ LDFLAGS=-lreadline
 DFLAGS=-g
 RFLAGS=-DNDEBUG -O2
 OUT=impish
-INDENT=indent
 IFLAGS=-i3 -nut -linux
 SIZE=size
 INSTALL=install
@@ -30,7 +29,7 @@ PREFIX=/usr/local/bin
 
 .PHONY: all help indent clean
 
-all: $(OUT) 
+all: $(OUT) $(OUT)-dbg
 
 $(OUT): $(SRC) $(INC)
 	@$(CC) $(CFLAGS) $(RFLAGS) $(LDFLAGS) $(SRC) -o $(OUT)
@@ -42,9 +41,6 @@ $(OUT)-dbg: $(SRC) $(INC)
 
 help:
 	@echo available targets: $(OUT) $(OUT)-dbg indent clean install
-
-indent:
-	@$(INDENT) $(IFLAGS) $(SRC) $(INC)
 
 clean:
 	@$(RM) -f $(OUT) $(OUT)-dbg *.o *~
