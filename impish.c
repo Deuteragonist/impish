@@ -173,6 +173,9 @@ void eval(const char *const cmdline)
 
          /* TODO: return something different here */
          exit(EXIT_SUCCESS);
+      } else {
+         fprintf(stderr, "warning: strange execvp() behavior");
+         break;
       }
 
    case -1:
