@@ -112,6 +112,9 @@ void sigTERMAction(int sig, siginfo_t * siginfo, void *ctx)
    (void)sig;
    (void)siginfo;
    (void)ctx;
+
+   fflush(stdout);
+   printf("caught sigterm (%i). ignoring...\n", sig);
 }
 
 void sigCHLDAction(int sig, siginfo_t * siginfo, void *ctx)
