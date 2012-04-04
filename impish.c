@@ -36,10 +36,13 @@
 #include "util.h"
 #include "sighandlers.h"
 
-/* linker directives for library globals */
-extern char **environ;
-extern char *optarg;
-extern int optind, opterr, optopt;
+/*
+ * linker directives for library globals
+ *
+ * extern char **environ;
+ * extern char *optarg;
+ * extern int optind, opterr, optopt;
+ */
 
 /* read-only module-only globals */
 static const char DEFAULT_PROMPT[] = ">> ";
