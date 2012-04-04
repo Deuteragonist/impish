@@ -56,7 +56,12 @@ static const char USAGE_STRING[] =
  * and line continuation, making the appropriate changes
  * where it gets passed to printf */
 
-/* read/write globals */bool verbose;
+/* read/write globals */
+bool verbose;
+bool echo;
+char * PROMPT;
+FILE * saved_stdin;
+FILE * ofile;
 
 /* read-only globals */
 const int IMPISH_VERSION_NUMS[] = { 0, 0, 4 };
@@ -75,6 +80,7 @@ void printVersion() {
 void processArgs(int argc, char * const argv[]);
 void eval(const char * const cmdline);
 void parseLine(const char * const buf, int *argcPtr, char ***argvPtr);
+void printfeedback(int cpid);
 bool builtinCommand(const char * const * const argv);
 void installSignalHandlers();
 void exitHandler();
@@ -93,8 +99,7 @@ int main(int argc, char *argv[])
    /* main loop: read - eval - print */
    char *cmdline;
    do {
-      cmdline = readline(DEFAULT_PROMPT);
-
+      cmdline = readline(PROMPT);
       if (cmdline) {
          eval(cmdline);
          impishFree(cmdline);
@@ -109,7 +114,10 @@ int main(int argc, char *argv[])
 void processArgs(int argc, char *const argv[])
 {
    int opt;
-
+   //FILE * ofile;
+   //dup2(STDIN_FILENO,fileno(saved_stdin));
+   extern char * optarg;
+   
    /* Option parsing loop */
    while ((opt = getopt(argc, argv, OPT_STRING)) != -1) {
       switch (opt) {
@@ -126,15 +134,28 @@ void processArgs(int argc, char *const argv[])
          exit(EXIT_SUCCESS);
 
       case 'i':
+         PROMPT = (char*)malloc(strlen(DEFAULT_PROMPT)*sizeof(char));
+         strcpy(PROMPT,DEFAULT_PROMPT);
+         break;
+         
       case 'e':
+         echo = true;
+         break;
+         
       case 's':
          fprintf(stderr, "warning: flag unimplemented");
          /* TODO: set a flag */
          break;
-
-      default:
-         fprintf(stderr, "%s", USAGE_STRING);
-         exit(EXIT_FAILURE);
+      
+      default: //Assume we're to read from that file
+         ofile = fopen(optarg,"r");
+         if(ofile == NULL){
+            printf("Could not open file: %s\n",optarg);
+            exit(EXIT_FAILURE);  
+         }
+         else{
+            dup2(fileno(ofile), STDIN_FILENO);  
+         }
       }
    }
 
@@ -149,7 +170,10 @@ void eval(const char *const cmdline)
    int argc = 0;
    char **argv = NULL;
    int status;
-
+   
+   if(echo)
+      printf("%s \n",cmdline);
+   
    parseLine(cmdline, &argc, &argv);
 
    if (argv == NULL || argv[0] == NULL) {
@@ -183,13 +207,14 @@ void eval(const char *const cmdline)
       /* Interact with the child via signals */
       do {
          int w = waitpid(pid, &status, WUNTRACED | WCONTINUED);
-
+         
+         if(interactive){
          /* Check for error condition */
          if (w == -1) {
             perror("waitpid");
             exit(EXIT_FAILURE);
          }
-
+      
          /* Print messages back based on the status */
          if (WIFEXITED(status) && status != EXIT_SUCCESS) {
             printf("warning: child exited abnormally with status = %d\n",
@@ -206,7 +231,8 @@ void eval(const char *const cmdline)
 
          }
       } while (!WIFEXITED(status) && !WIFSIGNALED(status));
-
+      if(strlen(PROMPT) > 0)
+        printf("%d: %s command finished, pid, status = %d %x\n",getpid(), ctime(),  WEXITSTATUS(status));
       break;
    }
 
