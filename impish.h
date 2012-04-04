@@ -17,6 +17,10 @@
 #ifndef IMPISH_H
 #define IMPISH_H
 
+#ifndef __STDC__
+#error Your compiler is not standards conformant.
+#endif
+
 #include <stdbool.h>
 
 #define ARRAY_SIZE(x) (sizeof (x) / sizeof *(x))
