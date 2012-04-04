@@ -3,7 +3,7 @@
  *
  * Author: Max DeLiso
  * Email: jmd5473@psu.edu, maxdeliso@gmail.com
- * File: Makefile
+ * File: impish.c
  * Repository: https://github.com/maxdeliso/impish
  * License:
  *
