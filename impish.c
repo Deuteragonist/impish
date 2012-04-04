@@ -287,8 +287,8 @@ void parseLine(const char *const buf, int *argcPtr, char ***argvPtr)
 
 void installSignalHandlers()
 {
-   /* initialize an array of sigaction structs coupled with their 
-    * intended signal */
+   /* initialize an array of sigaction structs coupled with their intended signal,
+    * list global params are specified below */
    static struct {
       int sig;
       struct sigaction handler;
@@ -297,91 +297,104 @@ void installSignalHandlers()
         .sig = SIGHUP,
           .handler = {
           .sa_sigaction = sigHUPAction,
-          .sa_flags = SA_SIGINFO,
-          .sa_restorer = NULL}
+          .sa_flags = SA_SIGINFO
+          }
       },
       {
         .sig = SIGINT,
         .handler = {
           .sa_sigaction = sigINTAction,
-          .sa_flags = SA_SIGINFO,
-          .sa_restorer = NULL}
+          .sa_flags = SA_SIGINFO
+        }
       },
       {
         .sig = SIGQUIT,
         .handler = {
           .sa_sigaction = sigQUITAction,
-          .sa_flags = SA_SIGINFO,
-          .sa_restorer = NULL}
+          .sa_flags = SA_SIGINFO
+        }
       }, 
       {
         .sig = SIGILL,
         .handler = {
           .sa_sigaction = sigILLAction,
-          .sa_flags = SA_SIGINFO,
-          .sa_restorer = NULL}
+          .sa_flags = SA_SIGINFO
+        }
       },
       {
         .sig = SIGTRAP,
         .handler = {
           .sa_sigaction = sigTRAPAction,
-          .sa_flags = SA_SIGINFO,
-          .sa_restorer = NULL}
+          .sa_flags = SA_SIGINFO
+        }
       }, 
       {
         .sig = SIGABRT,
         .handler = {
           .sa_sigaction = sigABRTAction,
-          .sa_flags = SA_SIGINFO,
-          .sa_restorer = NULL}
+          .sa_flags = SA_SIGINFO
+        }
       }, 
       {
         .sig = SIGFPE,
         .handler = {
           .sa_sigaction = sigFPEAction,
-          .sa_flags = SA_SIGINFO,
-          .sa_restorer = NULL}
+          .sa_flags = SA_SIGINFO
+        }
       },
       {
         .sig = SIGSEGV,
         .handler = {
           .sa_sigaction = sigSEGVAction,
-          .sa_flags = SA_SIGINFO,
-          .sa_restorer = NULL}
+          .sa_flags = SA_SIGINFO
+        }
       }, 
       {
         .sig = SIGPIPE,
         .handler = {
           .sa_sigaction = sigPIPEAction,
           .sa_flags = SA_SIGINFO,
-          .sa_restorer = NULL}
+        }
       }, 
       {
         .sig = SIGALRM,
         .handler = {
           .sa_sigaction = sigALRMAction,
-          .sa_flags = SA_SIGINFO,
-          .sa_restorer = NULL}
+          .sa_flags = SA_SIGINFO 
+        }
       }, 
       {
         .sig = SIGTERM,
         .handler = {
           .sa_sigaction = sigTERMAction,
-          .sa_flags = SA_SIGINFO,
-          .sa_restorer = NULL}
+          .sa_flags = SA_SIGINFO
+        }
       }, 
       {
         .sig = SIGCHLD,
         .handler = {
           .sa_sigaction = sigCHLDAction,
-          .sa_flags = SA_SIGINFO,
-          .sa_restorer = NULL}
+          .sa_flags = SA_SIGINFO
+        }
       }
    };
 
+   /* allocate the loop invariant */
+   sigset_t eSet;
+   sigemptyset(&eSet);
+
+   /* call sigaction on each of the values defined in the struct */
    for (size_t i = 0; i < ARRAY_SIZE(sigStructs); i++) {
+      /* copy the current signal struct into cStruct */
+      struct sigaction cStruct = sigStructs[i].handler;
+
+      /* write the list-global params */
+      cStruct.sa_mask = eSet;
+      cStruct.sa_restorer = NULL; 
+
+      /* call sigaction */
       if (sigaction(sigStructs[i].sig,
-                    (const struct sigaction * restrict)&sigStructs[i].handler,
+                    (const struct sigaction * restrict)& cStruct,
                     NULL) < 0) {
          fprintf(stderr,
                  "warning: failed to install signal handler for signal: %i: %s\n",
