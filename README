@@ -1,5 +1,9 @@
-A toy command shell for unices written for educational purposes.
+impish is a toy command shell for unices written for educational purposes.
+
+The code conforms to C99 and POSIX standards.
+In cases where library functionality is standards conformant but not
+implemented on current versions of operating systems yet, (i.e.
+strndup on Mac OS X), workarounds are used.
+
 This software uses the MIT license.
-
 Refer to COPYING for details.
-
