@@ -150,9 +150,28 @@ void eval(const char *const cmdline)
       exit(EXIT_FAILURE);
 
    default:
-      if (waitpid(pid, &status, 0) < 0) {
-         perror("waitpid");
-      }
+      /* Interact with the child via signals */
+      do {
+         int w = waitpid(pid, &status, WUNTRACED | WCONTINUED);
+
+         /* Check for error condition */
+         if (w == -1) {
+            perror("waitpid");
+            exit(EXIT_FAILURE);
+         }
+
+         /* Print messages back based on the status */
+         if (WIFEXITED(status) && status != EXIT_SUCCESS) {
+            printf("warning: child exited abnormally with status = %d\n", WEXITSTATUS(status));
+         } else if (WIFSIGNALED(status)) {
+            printf("warning: child killed by signal = %d\n", WTERMSIG(status));
+         } else if (WIFSTOPPED(status)) {
+            printf("warning: child stopped by signal = %d\n", WSTOPSIG(status));
+         } else if (WIFCONTINUED(status)) {
+            printf("child continued\n");
+         }
+      } while (!WIFEXITED(status) && !WIFSIGNALED(status));
+
       break;
    }
 
@@ -160,6 +179,7 @@ void eval(const char *const cmdline)
    for (int i = 0; i < argc; ++i) {
       impishFree(argv[i]);
    }
+
    impishFree(argv);
 
 }
@@ -216,7 +236,7 @@ void parseLine(const char *const buf, int *argcPtr, char ***argvPtr)
       }
 
       /* check to see if we've skipped to the end */
-      if (cpos - ebuf == ebufSize ) {
+      if (cpos - ebuf == ebufSize) {
          impishMessage("detected trailing whitespace... continuing\n");
          continue;
       }
