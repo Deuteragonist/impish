@@ -65,7 +65,7 @@ const int IMPISH_VERSION_NUMS[] = {0, 0, 3};
 
 /* functions protoyped in impish.h */
 void printVersion() {
-   printf("impish v%d.%d.%d compiled on %s at %s\n",
+   printf("impish v%d.%d.%d\ncompiled on %s at %s\n",
          IMPISH_VERSION_NUMS[0],
          IMPISH_VERSION_NUMS[1],
          IMPISH_VERSION_NUMS[2],
