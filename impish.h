@@ -26,4 +26,4 @@ extern const int IMPISH_VERSION_NUMS[3];
 
 void printVersion();
 
-#endif
+#endif /* IMPISH_H */

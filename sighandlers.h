@@ -36,4 +36,4 @@ void sigALRMAction(int sig, siginfo_t * siginfo, void *ctx);
 void sigTERMAction(int sig, siginfo_t * siginfo, void *ctx);
 void sigCHLDAction(int sig, siginfo_t * siginfo, void *ctx);
 
-#endif                          /* IMPISG_SIG_HANDLERS_H */
+#endif /* IMPISG_SIG_HANDLERS_H */
