@@ -61,12 +61,17 @@ void eval(const char *const cmdline);
 void parseLine(const char *const buf, int *argcPtr, char ***argvPtr);
 bool builtinCommand(const char *const *const argv);
 void installSignalHandlers();
+void exitHandler();
 
 /* entry point */
 int main(int argc, char *argv[])
 {
    processArgs(argc, argv);
    installSignalHandlers();
+   
+   if(atexit(exitHandler) != 0) {
+     printf("warning: failed to install exit handler\n");
+   }
 
    char *cmdline;
    do {
@@ -393,4 +398,8 @@ void installSignalHandlers()
         impishMessage("installed handler for signal: %i\n", sigStructs[i].sig);
       }
    }
+}
+
+void exitHandler() {
+  printf("\n\nbye.\n");
 }
