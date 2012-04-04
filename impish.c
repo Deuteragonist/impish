@@ -61,7 +61,7 @@ static const char USAGE_STRING[] =
 bool verbose;
 
 /* read-only globals */
-const int IMPISH_VERSION_NUMS[] = {0, 0, 3};
+const int IMPISH_VERSION_NUMS[] = {0, 0, 4};
 
 /* functions protoyped in impish.h */
 void printVersion() {
