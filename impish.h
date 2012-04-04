@@ -19,6 +19,10 @@
 #include <stdbool.h>
 
 #define ARRAY_SIZE(x) (sizeof (x) / sizeof *(x))
+
 extern bool verbose;
+extern const int IMPISH_VERSION_NUMS[3];
+
+void printVersion();
 
 #endif

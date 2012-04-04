@@ -42,7 +42,7 @@ extern int optind, opterr, optopt;
 
 /* read-only module-only globals */
 static const char DEFAULT_PROMPT[] = ">> ";
-static const char OPT_STRING[] = "hvies:";
+static const char OPT_STRING[] = "hvVies:";
 static const char USAGE_STRING[] =
     "Usage:  impish [-h] [-v] [-i] [-e] [-s f] [file]\n"
     " -h     help\n"
@@ -55,7 +55,23 @@ static const char USAGE_STRING[] =
 /* read/write globals */
 bool verbose;
 
-/* main routines */
+/* read-only globals */
+const int IMPISH_VERSION_NUMS[] = {0, 0, 3};
+
+/* functions protoyped in impish.h */
+void printVersion() {
+  printf("impish v%d.%d.%d compiled on %s at %s\n",
+    IMPISH_VERSION_NUMS[0],
+    IMPISH_VERSION_NUMS[1],
+    IMPISH_VERSION_NUMS[2],
+    __DATE__,
+    __TIME__);
+
+ printf("C standard supported:  %zd\n", 
+    __STDC_VERSION__); 
+}
+
+/* functions defined in this file */
 void processArgs(int argc, char *const argv[]);
 void eval(const char *const cmdline);
 void parseLine(const char *const buf, int *argcPtr, char ***argvPtr);
@@ -101,6 +117,10 @@ void processArgs(int argc, char *const argv[])
          verbose = true;
          break;
 
+      case 'V':
+         printVersion();
+         exit(EXIT_SUCCESS);
+         break;   
       case 'i':
          /* TODO: set a flag */
          break;
