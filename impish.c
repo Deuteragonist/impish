@@ -120,7 +120,7 @@ void processArgs(int argc, char *const argv[])
       case 'V':
          printVersion();
          exit(EXIT_SUCCESS);
-         break;   
+
       case 'i':
          /* TODO: set a flag */
          break;
@@ -214,10 +214,13 @@ void eval(const char *const cmdline)
 
 }
 
+/* function returns true if the command was builtin */
+/* TODO: encode data which needs to be communicated to
+ * the fork-exec stanza */
 bool builtinCommand(const char *const *const argv)
 {
-   if (!strcmp(argv[0], "quit")) {
-      exit(0);
+   if (!strcmp(argv[0], "quit") || !strcmp(argv[0],"exit")) {
+      exit(EXIT_SUCCESS);
    }
 
    if (!strcmp(argv[0], "&")) {
