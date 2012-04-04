@@ -7,11 +7,13 @@
  * Repository: https://github.com/maxdeliso/impish
  * License:
  *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING 
- * BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND 
- * NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, 
- * DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, 
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+ * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+ * DEALINGS IN THE SOFTWARE.
  */
 
 #ifndef IMPISH_UTIL_H
@@ -23,12 +25,18 @@
 #include "impish.h"
 
 /* macro utility functions */
-#define impishVerify(tf, msg)      _impishVerify(tf, msg,    __func__, __LINE__)
-#define impishMalloc(size)         _impishMalloc(size,       __func__, __LINE__)
-#define impishRealloc(ptr, size)   _impishRealloc(ptr, size, __func__, __LINE__)
-#define impishStrdup(s)            _impishStrdup(s,          __func__, __LINE__)
-#define impishStrndup(s,n)         _impishStrndup(s, n,      __func__, __LINE__)
-#define impishFree(s)              _impishFree(s,            __func__, __LINE__)
+#define impishVerify(tf, msg) \
+   _impishVerify(tf, msg,    __func__, __LINE__)
+#define impishMalloc(size) \
+   _impishMalloc(size,       __func__, __LINE__)
+#define impishRealloc(ptr, size) \
+   _impishRealloc(ptr, size, __func__, __LINE__)
+#define impishStrdup(s) \
+   _impishStrdup(s, __func__, __LINE__)
+#define impishStrndup(s,n) \
+   _impishStrndup(s, n, __func__, __LINE__)
+#define impishFree(s) \
+   _impishFree(s, __func__, __LINE__)
 
 /* utility functions/wrappers */
 void _impishVerify(
