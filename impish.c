@@ -399,6 +399,8 @@ void installSignalHandlers()
          fprintf(stderr,
                  "warning: failed to install signal handler for signal: %i: %s\n",
                  sigStructs[i].sig, strerror(errno));
+      } else {
+        impishMessage("installed handler for signal: %i\n", sigStructs[i].sig);
       }
    }
 }
