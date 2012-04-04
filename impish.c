@@ -289,6 +289,7 @@ void installSignalHandlers()
 {
    /* initialize an array of sigaction structs coupled with their intended signal,
     * list global params are specified below */
+   static const int IMPISH_SA_FLAGS = SA_SIGINFO | SA_RESTART;
    static struct {
       int sig;
       struct sigaction handler;
@@ -296,85 +297,73 @@ void installSignalHandlers()
       {
         .sig = SIGHUP,
           .handler = {
-          .sa_sigaction = sigHUPAction,
-          .sa_flags = SA_SIGINFO
+          .sa_sigaction = sigHUPAction
           }
       },
       {
         .sig = SIGINT,
         .handler = {
-          .sa_sigaction = sigINTAction,
-          .sa_flags = SA_SIGINFO
+          .sa_sigaction = sigINTAction
         }
       },
       {
         .sig = SIGQUIT,
         .handler = {
-          .sa_sigaction = sigQUITAction,
-          .sa_flags = SA_SIGINFO
+          .sa_sigaction = sigQUITAction
         }
       }, 
       {
         .sig = SIGILL,
         .handler = {
-          .sa_sigaction = sigILLAction,
-          .sa_flags = SA_SIGINFO
+          .sa_sigaction = sigILLAction
         }
       },
       {
         .sig = SIGTRAP,
         .handler = {
-          .sa_sigaction = sigTRAPAction,
-          .sa_flags = SA_SIGINFO
+          .sa_sigaction = sigTRAPAction
         }
       }, 
       {
         .sig = SIGABRT,
         .handler = {
-          .sa_sigaction = sigABRTAction,
-          .sa_flags = SA_SIGINFO
+          .sa_sigaction = sigABRTAction
         }
       }, 
       {
         .sig = SIGFPE,
         .handler = {
-          .sa_sigaction = sigFPEAction,
-          .sa_flags = SA_SIGINFO
+          .sa_sigaction = sigFPEAction
         }
       },
       {
         .sig = SIGSEGV,
         .handler = {
-          .sa_sigaction = sigSEGVAction,
-          .sa_flags = SA_SIGINFO
+          .sa_sigaction = sigSEGVAction
         }
       }, 
       {
         .sig = SIGPIPE,
         .handler = {
-          .sa_sigaction = sigPIPEAction,
-          .sa_flags = SA_SIGINFO,
+          .sa_sigaction = sigPIPEAction
         }
       }, 
       {
         .sig = SIGALRM,
         .handler = {
-          .sa_sigaction = sigALRMAction,
-          .sa_flags = SA_SIGINFO 
+          .sa_sigaction = sigALRMAction
         }
       }, 
       {
         .sig = SIGTERM,
         .handler = {
-          .sa_sigaction = sigTERMAction,
-          .sa_flags = SA_SIGINFO
+          .sa_sigaction = sigTERMAction
         }
       }, 
       {
         .sig = SIGCHLD,
         .handler = {
-          .sa_sigaction = sigCHLDAction,
-          .sa_flags = SA_SIGINFO
+          .sa_sigaction = sigCHLDAction
         }
       }
    };
@@ -391,6 +380,7 @@ void installSignalHandlers()
       /* write the list-global params */
       cStruct.sa_mask = eSet;
       cStruct.sa_restorer = NULL; 
+      cStruct.sa_flags = IMPISH_SA_FLAGS;
 
       /* call sigaction */
       if (sigaction(sigStructs[i].sig,
